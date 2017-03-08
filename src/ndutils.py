@@ -1,5 +1,11 @@
-''' Utilities for nd (n-dimensional) arrays '''
+''' 
+Utilities for nd (n-dimensional) arrays 
+
+Contact: adalca@csail.mit.edu
+'''
 import numpy as np
+import scipy
+import scipy.ndimage
 
 def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     '''
@@ -135,3 +141,105 @@ def boundingbox(bwvol):
 
     # concatinate [starts, ends]
     return np.concatenate((starts, ends), 0)
+
+
+
+def bwdist(bwvol):
+    ''' 
+    positive distance transform from positive entries in logical image 
+    
+    Parameters
+    ----------
+    bwvol : nd array
+        The logical volume
+
+    Output
+    ------
+    possdtrf : nd array 
+        the positive distance transform
+
+    See Also
+    --------
+    bw2sdtrf
+    '''
+
+    # reverse volume to run scipy function
+    revbwvol = np.logical_not(bwvol)
+
+    # get distance
+    return scipy.ndimage.morphology.distance_transform_edt(revbwvol)
+
+
+
+def bw2sdtrf(bwvol):
+    ''' 
+    computes the signed distance transform from the surface between the
+    binary True/False elements of logical bwvol
+
+    Note: the distance transform on either side of the surface will be +1/-1 
+    - i.e. there are no voxels for which the dst should be 0.
+    
+    Runtime: currently the function uses bwdist twice. If there is a quick way to 
+    compute the surface, bwdist could be used only once.
+
+    Parameters
+    ----------
+    bwvol : nd array
+        The logical volume
+
+    Output
+    ------
+    sdtrf : nd array 
+        the signed distance transform
+
+    See Also
+    --------
+    bwdist
+        
+    '''
+
+    # get the positive transform (outside the positive island)
+    posdst = bwdist(bwvol)
+
+    # get the negative transform (distance inside the island)
+    notbwvol = np.logical_not(bwvol)
+    negdst = bwdist(notbwvol)
+
+    # combine the positive and negative map
+    return posdst * notbwvol - negdst * bwvol
+
+
+def bw2contour(bwvol, type='both'):
+    ''' 
+    computes the contour of island(s) on a nd logical volume
+
+    Parameters
+    ----------
+    bwvol : nd array
+        The logical volume
+    type : optional string
+        since the contour is drawn on voxels, it can be drawn on the inside 
+        of the island ('inner'), outside of the island ('outer'), or both 
+        ('both' - default)
+
+    Output
+    ------
+    contour : nd array
+        the contour map of the same size of the input
+
+    See Also
+    --------
+    bwdist, bw2dstrf
+        
+    '''
+    
+    # obtain a signed distance transform for the bw volume
+    sdtrf = bw2sdtrf(bwvol)
+
+    if type == 'inner':
+        return np.logical_and(sdtrf <= 0, sdtrf > -1.0001)
+    elif type == 'outer':
+        return np.logical_and(sdtrf >= 0, sdtrf < 1.0001)
+    else:
+        assert type == 'both', 'type should only be inner, outer or both'
+        return np.abs(sdtrf) < 1.01
