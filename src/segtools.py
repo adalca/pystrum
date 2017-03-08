@@ -50,3 +50,29 @@ def seg2contour(seg, exclude_zero=True, contour_type='inner'):
 		contour_map[label_contour_map] = lab
 
 	return contour_map
+
+def seg_overlap(vol, seg, do_contour=True, do_rgb=True, cmap=None):
+	''' 
+	overlap a nd volume and nd segmentation (label map) 
+	
+	not well tested yet.
+	'''
+	
+	if do_contour:
+		seg = seg2contour(seg)
+	
+	if do_rgb:
+		if cmap is None:
+			nb_labels = len(np.unique(seg))
+			colors = np.random.random((nb_labels, 3)) * 0.5 + 0.5
+			colors[0,:] = [0,0,0]
+			
+		olap = colors[seg.flat, :]
+		olap = np.reshape(olap, vol.shape + (3, ))
+
+	else:
+		olap = seg
+		olap[seg == 0] = vol[seg == 0]
+
+	return olap
+
