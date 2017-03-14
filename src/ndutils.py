@@ -1,10 +1,11 @@
 ''' 
-Utilities for nd (n-dimensional) arrays 
+Utilities for nd (n-dimensional) arrays
+Tested on Python 3.5
 
 Contact: adalca@csail.mit.edu
 '''
 import numpy as np
-import scipy
+import scipy as sp
 import scipy.ndimage
 
 def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
@@ -145,9 +146,9 @@ def boundingbox(bwvol):
 
 
 def bwdist(bwvol):
-    ''' 
-    positive distance transform from positive entries in logical image 
-    
+    '''
+    positive distance transform from positive entries in logical image
+
     Parameters
     ----------
     bwvol : nd array
@@ -155,7 +156,7 @@ def bwdist(bwvol):
 
     Output
     ------
-    possdtrf : nd array 
+    possdtrf : nd array
         the positive distance transform
 
     See Also
@@ -243,3 +244,48 @@ def bw2contour(bwvol, type='both'):
     else:
         assert type == 'both', 'type should only be inner, outer or both'
         return np.abs(sdtrf) < 1.01
+
+
+def ndgrid(*args, **kwargs):
+    '''
+    Disclaimer: This code is taken directly from the scitools package [1]
+    Since at the time of writing scitools predominantly requires python 2.7 while we work with 3.5+
+    To avoid issues, we copy the quick code here.
+
+    Same as calling ``meshgrid`` with *indexing* = ``'ij'`` (see
+    ``meshgrid`` for documentation).
+    '''
+    kwargs['indexing'] = 'ij'
+    return np.meshgrid(*args, **kwargs)
+
+
+
+def volsize2ndgrid(volsize):
+    '''
+    return the dense nd-grid for the volume with size volsize
+    essentially return the ndgrid fpr
+    '''
+    ranges = [np.arange(e) for e in volsize]
+    return ndgrid(*ranges)
+
+
+
+def bw_sphere(volshape, rad, loc=None):
+    '''
+    compute a logical (black/white) image of a sphere
+    '''
+
+    # if the location is not given, use the center of the volume.
+    if loc is None:
+        loc = 1.0 * (np.array(volshape)-1) / 2
+    assert len(loc) == len(volshape), \
+        'Location (%d) and volume dimensions (%d) do not match' % (len(loc), len(volshape))
+
+
+    # compute distances between each location in the volume and ``loc``
+    volgrid = volsize2ndgrid(volshape)
+    dst = [np.square(loc[d] - volgrid[d]) for d in range(len(volshape))]
+    dst = np.sqrt(np.sum(dst, 0))
+
+    # draw the sphere
+    return dst <= rad
