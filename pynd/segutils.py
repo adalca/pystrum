@@ -38,7 +38,7 @@ def seg2contour(seg, exclude_zero=True, contour_type='inner'):
 
     # get the contour of each label
     contour_map = seg * 0
-    for li, lab in enumerate(labels):
+    for lab in labels:
 
         # extract binary label map for this label
         label_map = seg == lab
@@ -51,9 +51,11 @@ def seg2contour(seg, exclude_zero=True, contour_type='inner'):
 
     return contour_map
 
+
+
 def seg_overlap(vol, seg, do_contour=True, do_rgb=True, cmap=None):
     '''
-    overlap a nd volume and nd segmentation (label map) 
+    overlap a nd volume and nd segmentation (label map)
 
     not well tested yet.
     '''
@@ -67,9 +69,9 @@ def seg_overlap(vol, seg, do_contour=True, do_rgb=True, cmap=None):
         if cmap is None:
             nb_labels = np.max(seg) + 1
             colors = np.random.random((nb_labels, 3)) * 0.5 + 0.5
-            colors[0, :] = [0,0,0]
+            colors[0, :] = [0, 0, 0]
         else:
-            colors=cmap
+            colors = cmap
 
         olap = colors[seg.flat, :]
         sf = seg.flat == 0
