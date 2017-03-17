@@ -5,10 +5,10 @@ Contact: adalca@csail.mit.edu
 '''
 
 import numpy as np
-import ndutils as nd
+from . import ndutils as nd
 
 def seg2contour(seg, exclude_zero=True, contour_type='inner'):
-    ''' 
+    '''
     transform nd segmentation (label maps) to contour maps
 
     Parameters
