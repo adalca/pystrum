@@ -1,9 +1,10 @@
-''' 
+'''
 Utilities for nd (n-dimensional) arrays
 Tested on Python 3.5
 
 Contact: adalca@csail.mit.edu
 '''
+
 import numpy as np
 import scipy as sp
 import scipy.ndimage
@@ -173,14 +174,14 @@ def bwdist(bwvol):
 
 
 def bw2sdtrf(bwvol):
-    ''' 
+    '''
     computes the signed distance transform from the surface between the
     binary True/False elements of logical bwvol
 
-    Note: the distance transform on either side of the surface will be +1/-1 
+    Note: the distance transform on either side of the surface will be +1/-1
     - i.e. there are no voxels for which the dst should be 0.
-    
-    Runtime: currently the function uses bwdist twice. If there is a quick way to 
+
+    Runtime: currently the function uses bwdist twice. If there is a quick way to
     compute the surface, bwdist could be used only once.
 
     Parameters
@@ -190,13 +191,12 @@ def bw2sdtrf(bwvol):
 
     Output
     ------
-    sdtrf : nd array 
+    sdtrf : nd array
         the signed distance transform
 
     See Also
     --------
     bwdist
-        
     '''
 
     # get the positive transform (outside the positive island)
@@ -211,7 +211,7 @@ def bw2sdtrf(bwvol):
 
 
 def bw2contour(bwvol, type='both'):
-    ''' 
+    '''
     computes the contour of island(s) on a nd logical volume
 
     Parameters
@@ -219,8 +219,8 @@ def bw2contour(bwvol, type='both'):
     bwvol : nd array
         The logical volume
     type : optional string
-        since the contour is drawn on voxels, it can be drawn on the inside 
-        of the island ('inner'), outside of the island ('outer'), or both 
+        since the contour is drawn on voxels, it can be drawn on the inside
+        of the island ('inner'), outside of the island ('outer'), or both
         ('both' - default)
 
     Output
@@ -231,9 +231,8 @@ def bw2contour(bwvol, type='both'):
     See Also
     --------
     bwdist, bw2dstrf
-        
     '''
-    
+
     # obtain a signed distance transform for the bw volume
     sdtrf = bw2sdtrf(bwvol)
 
