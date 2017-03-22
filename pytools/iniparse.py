@@ -1,15 +1,84 @@
 '''
-very simple ini parser that expands on configparser
-tries to cast values from string whereever possible
-parsed data ini can be accessed with
+very simple ini parser and tools
 
-data = ini_to_struct(file)
-value = data.section.key
+tested on python 3.5+
 
-does not support hierarchical sections
+contact: adalca@csail.mit.edu
 '''
 
+# we'll need python's ini parser: 'configparser'
 import configparser
+
+def ini_to_struct(file):
+    '''
+    very simple ini parser that expands on configparser
+    tries to cast values from string whereever possible
+    parsed data ini can be accessed with
+
+    data = ini_to_struct(file)
+    value = data.section.key
+
+    does not support hierarchical sections
+
+    Parameters
+    ----------
+    file : string full filename of the ini file.
+
+    Outputs
+    -------
+    stuct : a Struct that allows ini data to be access in the manner of data.section.key
+    '''
+
+    # read the file via config.
+    conf = configparser.ConfigParser()
+    confout = conf.read(file)
+    assert len(confout) > 0, 'Cannot read file %s ' % file
+
+    # prepare the Struct
+    strct = Struct()
+
+    # go through the sections in the ini file
+    for sec in conf.sections():
+
+        # each section is its own struct
+        secstrct = Struct()
+
+        # go through the keys
+        for key in conf[sec]:
+            val = conf[sec][key]
+
+            # try to cast the data
+            ret, done = str_convert_single(val)
+
+            # if couldn't cast, try a comma/whitespace separated list
+            if not done:
+                lst = str_to_list(val)
+
+                # if the size of the list is 1, we didn't achieve anything
+                if len(lst) == 1:
+                    ret = lst[0]  # still not done
+
+                # if we actually get a list, only keep it if we can cast its elements to something.
+                # otherwise keep the entry as an entire string
+                else:
+                    # make sure all elements in the list convert to something
+                    done = all([str_convert_single(v)[1] for v in lst])
+                    if done:
+                        ret = [str_convert_single(v)[0] for v in lst]
+
+            # defeated, accept the entry as just a simple string...
+            if not done:
+                ret = val  # accept string
+
+            # assign secstrct.key = ret
+            setattr(secstrct, key, ret)
+
+        # assign strct.sec = secstrct
+        setattr(strct, sec, secstrct)
+
+    return strct
+
+
 
 class Struct():
     '''
@@ -19,10 +88,23 @@ class Struct():
     '''
     pass
 
+
+
 def str_to_type(val, ctype):
     '''
     cast a string to a type (e.g. int('8')), with try/except
+    do *not* use for bool casting, instead see str_to_bull
+
+    Parameters
+    val : the string to cast
+
+    Output
+    (casted_val, success)
+        casted val : the casted value if successful, or None
+        success : bool if casting was successful
     '''
+    assert ctype is not bool, 'use str_to_bull() for casting to bool'
+
     ret = None
     success = True
     try:
@@ -34,6 +116,17 @@ def str_to_type(val, ctype):
 
 
 def str_to_bool(val):
+    '''
+    cast a string to a bool
+
+    Parameters
+    val : the string to cast
+
+    Output
+    (casted_val, success)
+        casted val : the casted value if successful, or None
+        success : bool if casting was successful
+    '''
     if val == 'True':
         return (True, True)
     elif val == 'False':
@@ -44,6 +137,16 @@ def str_to_bool(val):
 
 
 def str_to_list(val):
+    '''
+    split a string to a list of elements, where elements are separated by whitespace or commas
+    Leading/ending parantheses are stripped.
+
+    Parameters
+    val : the string to split
+
+    Output
+    casted_dst : the casted list
+    '''
     val = val.replace('[', '')
     val = val.replace('(', '')
     val = val.replace(']', '')
@@ -57,7 +160,19 @@ def str_to_list(val):
     return lst
 
 
+
 def str_convert_single(val):
+    '''
+    try to cast a string to an int, float or bool (in that order)
+
+    Parameters
+    val : the string to cast
+
+    Output
+    (casted_val, success)
+        casted val : the casted value if successful, or None
+        success : bool if casting was successful
+    '''
     # try int
     ret, done = str_to_type(val, int)
 
@@ -72,39 +187,4 @@ def str_convert_single(val):
     return (ret, done)
 
 
-def ini_to_struct(file):
-    ''' simple ini parser '''
-    conf = configparser.ConfigParser()
-    confout = conf.read(file)
-    assert len(confout) > 0, 'Cannot read file %s ' % file
-
-    strct = Struct()
-    for sec in conf.sections():
-        secstrct = Struct()
-
-        for key in conf[sec]:
-            val = conf[sec][key]
-
-            # try single possibilities:
-            ret, done = str_convert_single(val)
-
-            if not done:
-                lst = str_to_list(val)
-
-                if len(lst) == 1:
-                    ret = lst[0]  # still not done
-
-                else:
-                    done = all([str_convert_single(v)[1] for v in lst])
-                    if done:
-                        ret = [str_convert_single(v)[0] for v in lst]
-
-            # try list
-            if not done:
-                ret = val  # accept string
-
-            setattr(secstrct, key, ret)
-
-        setattr(strct, sec, secstrct)
-    return strct
 
