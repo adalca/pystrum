@@ -1,9 +1,9 @@
-'''
+"""
 Utilities for nd (n-dimensional) arrays
 Tested on Python 3.5
 
 Contact: adalca@csail.mit.edu
-'''
+"""
 
 import numpy as np
 import scipy as sp
@@ -11,7 +11,7 @@ import scipy.ndimage
 
 
 def boundingbox(bwvol):
-    '''
+    """
     bounding box coordinates of a nd volume
 
     Parameters
@@ -23,7 +23,7 @@ def boundingbox(bwvol):
     ------
     boundingbox : 1-by-(nd*2) array
         [xstart ystart ... xend yend ...]
-    '''
+    """
 
     # find indices where bwvol is True
     idx = np.where(bwvol)
@@ -40,7 +40,7 @@ def boundingbox(bwvol):
 
 
 def bwdist(bwvol):
-    '''
+    """
     positive distance transform from positive entries in logical image
 
     Parameters
@@ -56,7 +56,7 @@ def bwdist(bwvol):
     See Also
     --------
     bw2sdtrf
-    '''
+    """
 
     # reverse volume to run scipy function
     revbwvol = np.logical_not(bwvol)
@@ -67,7 +67,7 @@ def bwdist(bwvol):
 
 
 def bw2sdtrf(bwvol):
-    '''
+    """
     computes the signed distance transform from the surface between the
     binary True/False elements of logical bwvol
 
@@ -90,7 +90,7 @@ def bw2sdtrf(bwvol):
     See Also
     --------
     bwdist
-    '''
+    """
 
     # get the positive transform (outside the positive island)
     posdst = bwdist(bwvol)
@@ -104,7 +104,7 @@ def bw2sdtrf(bwvol):
 
 
 def bw2contour(bwvol, type='both'):
-    '''
+    """
     computes the contour of island(s) on a nd logical volume
 
     Parameters
@@ -124,7 +124,7 @@ def bw2contour(bwvol, type='both'):
     See Also
     --------
     bwdist, bw2dstrf
-    '''
+    """
 
     # obtain a signed distance transform for the bw volume
     sdtrf = bw2sdtrf(bwvol)
@@ -139,33 +139,31 @@ def bw2contour(bwvol, type='both'):
 
 
 def ndgrid(*args, **kwargs):
-    '''
+    """
     Disclaimer: This code is taken directly from the scitools package [1]
     Since at the time of writing scitools predominantly requires python 2.7 while we work with 3.5+
     To avoid issues, we copy the quick code here.
 
     Same as calling ``meshgrid`` with *indexing* = ``'ij'`` (see
     ``meshgrid`` for documentation).
-    '''
+    """
     kwargs['indexing'] = 'ij'
     return np.meshgrid(*args, **kwargs)
 
 
-
 def volsize2ndgrid(volsize):
-    '''
+    """
     return the dense nd-grid for the volume with size volsize
     essentially return the ndgrid fpr
-    '''
+    """
     ranges = [np.arange(e) for e in volsize]
     return ndgrid(*ranges)
 
 
-
 def bw_sphere(volshape, rad, loc=None):
-    '''
+    """
     compute a logical (black/white) image of a sphere
-    '''
+    """
 
     # if the location is not given, use the center of the volume.
     if loc is None:
@@ -184,7 +182,7 @@ def bw_sphere(volshape, rad, loc=None):
 
 
 def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
-    '''
+    """
     crop a nd volume.
 
     Parameters
@@ -202,10 +200,10 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     end : int, optional
         end of cropped volume
 
-    Output
+    Returns
     ------
     cropped_vol : nd array
-    '''
+    """
 
     vol_size = np.asarray(vol.shape)
 
@@ -266,9 +264,8 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     return vol[idx]
 
 
-
 def axissplit(arr, axis):
-    '''
+    """
     Split a nd volume along an exis into n volumes, where n is the size of the axis dim.
 
     Parameters
@@ -285,7 +282,7 @@ def axissplit(arr, axis):
         each entry is a sub-volume of the original volume
 
     See also numpy.split()
-    '''
+    """
     nba = arr.shape[axis]
     return np.split(arr, nba, axis=axis)
 
