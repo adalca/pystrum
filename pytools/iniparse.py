@@ -3,7 +3,7 @@ very simple ini parser and tools
 
 tested on python 3.5+
 
-contact: adalca@csail.mit.edu
+contact: adalca at csail.mit.edu
 '''
 
 # we'll need python's ini parser: 'configparser'
@@ -20,13 +20,11 @@ def ini_to_struct(file):
 
     does not support hierarchical sections
 
-    Parameters
-    ----------
-    file : string full filename of the ini file.
+    Parameters:
+        file: string full filename of the ini file.
 
-    Outputs
-    -------
-    stuct : a Struct that allows ini data to be access in the manner of data.section.key
+    Returns:
+        stuct: a Struct that allows ini data to be access in the manner of data.section.key
     '''
 
     # read the file via config.
@@ -79,15 +77,15 @@ def ini_to_struct(file):
     return strct
 
 
-
 class Struct():
     '''
     a simple struct class to allow for the following syntax:
     data = Struct()
     data.foo = 'bar'
     '''
-    pass
 
+    def __str__(self):
+        return self.__dict__.__str__()
 
 
 def str_to_type(val, ctype):
@@ -95,13 +93,13 @@ def str_to_type(val, ctype):
     cast a string to a type (e.g. int('8')), with try/except
     do *not* use for bool casting, instead see str_to_bull
 
-    Parameters
-    val : the string to cast
+    Parameters:
+        val: the string to cast
 
-    Output
-    (casted_val, success)
-        casted val : the casted value if successful, or None
-        success : bool if casting was successful
+    Returns:
+        (casted_val, success)
+        casted val: the casted value if successful, or None
+        success: bool if casting was successful
     '''
     assert ctype is not bool, 'use str_to_bull() for casting to bool'
 
@@ -114,18 +112,17 @@ def str_to_type(val, ctype):
     return (ret, success)
 
 
-
 def str_to_bool(val):
     '''
     cast a string to a bool
 
-    Parameters
-    val : the string to cast
+    Parameters:
+        val: the string to cast
 
-    Output
-    (casted_val, success)
-        casted val : the casted value if successful, or None
-        success : bool if casting was successful
+    Returns:
+        (casted_val, success)
+        casted val: the casted value if successful, or None
+        success: bool if casting was successful
     '''
     if val == 'True':
         return (True, True)
@@ -135,17 +132,16 @@ def str_to_bool(val):
         return (None, False)
 
 
-
 def str_to_list(val):
     '''
-    split a string to a list of elements, where elements are separated by whitespace or commas
+    Split a string to a list of elements, where elements are separated by whitespace or commas
     Leading/ending parantheses are stripped.
 
-    Parameters
-    val : the string to split
+    Returns:
+        val: the string to split
 
-    Output
-    casted_dst : the casted list
+    Returns:
+        casted_dst: the casted list
     '''
     val = val.replace('[', '')
     val = val.replace('(', '')
@@ -160,18 +156,17 @@ def str_to_list(val):
     return lst
 
 
-
 def str_convert_single(val):
     '''
     try to cast a string to an int, float or bool (in that order)
 
-    Parameters
-    val : the string to cast
+    Parameters:
+        val: the string to cast
 
-    Output
-    (casted_val, success)
-        casted val : the casted value if successful, or None
-        success : bool if casting was successful
+    Returns:
+        (casted_val, success)
+        casted val: the casted value if successful, or None
+        success: bool if casting was successful
     '''
     # try int
     ret, done = str_to_type(val, int)
@@ -185,6 +180,4 @@ def str_convert_single(val):
         ret, done = str_to_bool(val)
 
     return (ret, done)
-
-
 
