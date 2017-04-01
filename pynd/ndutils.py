@@ -19,8 +19,8 @@ def boundingbox(bwvol):
     vol : nd array
         the binary (black/white) array for which to compute the boundingbox
 
-    Output
-    ------
+    Returns
+    -------
     boundingbox : 1-by-(nd*2) array
         [xstart ystart ... xend yend ...]
     """
@@ -48,8 +48,8 @@ def bwdist(bwvol):
     bwvol : nd array
         The logical volume
 
-    Output
-    ------
+    Returns
+    -------
     possdtrf : nd array
         the positive distance transform
 
@@ -82,8 +82,8 @@ def bw2sdtrf(bwvol):
     bwvol : nd array
         The logical volume
 
-    Output
-    ------
+    Returns
+    -------
     sdtrf : nd array
         the signed distance transform
 
@@ -116,8 +116,8 @@ def bw2contour(bwvol, type='both'):
         of the island ('inner'), outside of the island ('outer'), or both
         ('both' - default)
 
-    Output
-    ------
+    Returns
+    -------
     contour : nd array
         the contour map of the same size of the input
 
