@@ -4,6 +4,10 @@ very simple ini parser and tools
 tested on python 3.6
 
 contact: adalca at csail.mit.edu
+
+TODO: see 
+  from collections import namedtuple
+  instead of Struct
 """
 
 # built-in modules
