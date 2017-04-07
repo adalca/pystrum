@@ -88,6 +88,23 @@ class Struct():
     def __str__(self):
         return self.__dict__.__str__()
 
+def str_to_none(val):
+    """
+    cast a string to a None
+
+    Parameters:
+        val: the string to cast
+
+    Returns:
+        (casted_val, success)
+        casted val: the casted value if successful, or None
+        success: None if casting was successful
+    """
+    if val == 'None':
+        return (None, True)
+    else:
+        return (None, False)
+
 
 def str_to_type(val, ctype):
     """
@@ -179,6 +196,10 @@ def str_convert_single(val):
     # try bool
     if not done:
         ret, done = str_to_bool(val)
+
+    # try None
+    if not done:
+        ret, done = str_to_none(val)
 
     return (ret, done)
 
