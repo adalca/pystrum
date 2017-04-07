@@ -88,6 +88,7 @@ class Struct():
     def __str__(self):
         return self.__dict__.__str__()
 
+
 def str_to_none(val):
     """
     cast a string to a None
@@ -186,6 +187,7 @@ def str_convert_single(val):
         casted val: the casted value if successful, or None
         success: bool if casting was successful
     """
+    val = val.strip()
     # try int
     ret, done = str_to_type(val, int)
 
