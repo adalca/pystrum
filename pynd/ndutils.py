@@ -5,6 +5,7 @@ Tested on Python 3.5
 Contact: adalca@csail.mit.edu
 """
 
+import builtins
 import numpy as np
 import scipy as sp
 import scipy.ndimage
@@ -257,12 +258,46 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
 
 
     # get indices. Since we want this to be an nd-volume crop function, we
-    idx = []
-    for i in range(len(end)):
-        idx.append(slice(start[i], end[i]))
+    # idx = []
+    # for i in range(len(end)):
+    #     idx.append(slice(start[i], end[i]))
+    idx = range(start, end)
 
     return vol[idx]
 
+
+def range(*args):
+    """
+    range([start], end [,step])
+    nd version of list(range), where each arg can be a vector of the same length
+
+    Parameters:
+        [start] (vector): the start
+
+    """
+
+    # if passed in scalars call the built-in range
+    if not isinstance(args[0], (list, tuple, np.ndarray)):
+        return builtins.range(*args)
+
+    # prepare the start, step and end
+    step = np.ones(len(args[0]), 'int')
+    if len(args) == 1:
+        end = args[0]
+        start = np.zeros(len(end), 'int')
+    elif len(args) == 2:
+        assert len(args[0]) == len(args[1]), "argument vectors do not match"
+        start, end = args
+    elif len(args) == 3:
+        assert len(args[0]) == len(args[1]), "argument vectors do not match"
+        assert len(args[0]) == len(args[2]), "argument vectors do not match"
+        start, end, step = args
+    else:
+        raise ValueError('unknown arguments')
+
+    # prepare
+    idx = tuple([slice(start[i], end[i], step[i]) for i in range(len(end))])
+    return idx
 
 def axissplit(arr, axis):
     """
@@ -287,3 +322,38 @@ def axissplit(arr, axis):
     return np.split(arr, nba, axis=axis)
 
 
+
+
+def sub2ind(arr, size, **kwargs):
+    """
+    similar to MATLAB's sub2ind
+
+    Note default order is C-style, not F-style (Fortran/MATLAB)
+    """
+    return np.ravel_multi_index(arr, size, **kwargs)
+
+
+def ind2sub(indices, size, **kwargs):
+    """
+    similar to MATLAB's ind2sub
+
+    Note default order is C-style, not F-style (Fortran/MATLAB)
+    """
+    return np.unravel_index(indices, size, **kwargs)
+
+
+
+
+def ind2sub_entries(indices, size, **kwargs):
+    """
+    returns a nb_entries -by- nb_dims (essentially the transpose of ind2sub)
+
+    somewhat similar to MATLAB's ind2subvec
+    https://github.com/adalca/mgt/blob/master/src/ind2subvec.m
+
+    Note default order is C-style, not F-style (Fortran/MATLAB)
+    """
+    sub = ind2sub(np.array(indices).flatten(), size, **kwargs)
+    subvec = np.vstack(sub).transpose()
+    # Warning this might be F-style-like stacking... it's a bit confusing
+    return subvec
