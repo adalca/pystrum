@@ -1,59 +1,87 @@
 """
 patchlib (python version)
 
-A powerful library for working with N-D patches. 
+A powerful library for working with N-D patches.
 Modelled after the MATLAB patchlib (https://github.com/adalca/patchlib)
 """
 
+# built-in
 import types
+import sys
+
+# third party
 import numpy as np
 
+# local
 import pynd.ndutils as nd
 from imp import reload
 reload(nd)
 
 
-def patch_gen(vol, patch_size, stride=1, nargout=1):
-    """
-    NOT VERY WELL TESTED
-    generator of patches from volume
-
-    TODO: use .grid() to get sub
-
-    """
-
-    cropped_vol_size = np.array(vol.shape) - np.array(patch_size) + 1
-    assert np.all(cropped_vol_size >= 0), \
-        "patch size needs to be smaller than volume size"
-
-    # get range subs
-    sub = ()
-    for cvs in cropped_vol_size:
-        sub += (list(range(0, cvs, stride)), )
-
-    # get ndgrid of subs
-    ndg = nd.ndgrid(*sub)
-    ndg = [f.flat for f in ndg]
-
-    # generator
-    slicer = lambda f, g: slice(f[idx], f[idx] + g)
-    for idx in range(len(ndg[0])):
-        patch_sub = [slicer(f, g) for f, g in zip(ndg, patch_size)]
-        if nargout == 1:
-            yield vol[patch_sub]
-        else:
-            yield (vol[patch_sub], patch_sub)
-
-
 def quilt(patches, patch_size, grid_size, patch_stride=1, nan_func=lambda x:np.nanmean(x, 0)):
-    """ patches should be a nPatches-by-nVoxels array, or a patch generator """
+    """
+    quilt (merge) or reconstruct volume from patch indexes in library
+
+    Parameters:
+        patches: generator of patches or matrix [N x V x K], with patches(i, :, 1:K)
+            indicates K patch candidates at location i (e.g. the result of a 3-nearest
+            neightbours search). V = prod(patch_size); N = prod(grid_size)
+        patch_size: vector indicating the patch size
+        grid_size or target_size: vector indicating the grid size in each dimension
+            OR
+            specification of the target image size instead of the grid_size
+        patch_stride (optional, default:1): patch stride (spacing), default is 1 (sliding window)
+        nan_fun (optional): function to compute accross stack layers. default: np.nanmean(x, 0)
+
+    Returns:
+        quilt_img: the quilted image
+    """
 
     patch_stack = stack(patches, patch_size, grid_size, patch_stride)
     return nan_func(patch_stack)
 
 
 def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
-    """ UNFINISHED """
+    """
+    Stack (gridded) patches in layer structure.
+
+    Together, patch_size, grid_size and the patch overlap (see below), indicate
+    how the patches will be layed out and what the target layer size will be. For more
+    information about the interplay between patch_size, grid_size and patchOverlap, see
+    patchlib.grid.
+
+    Parameters:
+        patches: generator of patches or matrix [N x V x K], with patches(i, :, 1:K)
+            indicates K patch candidates at location i (e.g. the result of a 3-nearest
+            neightbours search). V = prod(patch_size); N = prod(grid_size)
+        patch_size: vector indicating the patch size
+        grid_size or target_size: vector indicating the grid size in each dimension
+            OR
+            specification of the target image size instead of the grid_size
+        patch_stride (optional, default:1): patch stride (spacing), default is 1 (sliding window)
+        nargout (optional, default:1): the number of arguments to output
+
+    Returns:
+        layers: a [nb_layers x target_size x K] array, with nb_layers that are the size of
+            the desired target (i.e. once the patches are positioned to fit the grid). The
+            first layer, essentially stacks the first patch, then the next non-overlapping patch,
+            and so on. The second layer takes the first non-stacked patch, and then the next
+            non-overlapping patch, and so on until we run out of patches.
+        idxmat (if nargout >= 2): also returns a matrix the same size as
+            'layers' containing linear indexes into the inputted patches matrix. This is useful,
+            for example, to create a layer structure of patch weights to match the patches
+            layer structure. idxmat is [2 x N x targetSize x K], with idxmat[1, :] giving patch
+            ids, and idxmat[2, :] giving voxel ids
+        p_layer_idx (if nargout == 3): a [V x 1] vector indicating the layer index of each input
+            patch
+
+    See Also:
+        grid(), quilt()
+
+    See example in patchlib.quilt code.
+
+    Contact: {adalca,klbouman}@csail.mit.edu
+    """
 
 #    assert np.all(np.mod(patch_size, 2) == 1), "patch size is not odd"
     K = patches.shape[2] if len(patches.shape) > 2 else 1
@@ -133,20 +161,18 @@ def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
     if nargout == 1:
         return layers
     elif nargout == 2:
-        print("UNCHECKED")
+        print("idxmat UNTESTED", file=sys.stderr)
         return (layers, idxmat)
     elif nargout == 3:
-        print("UNCHECKED")
+        print("p_layer_idx UNTESTED", file=sys.stderr)
         p = np.zeros(1, np.max(patch_payer_idx.flatten()))
         p[layer_ids] = list(range(len(layer_ids)))
         return (layers, idxmat, p[patch_payer_idx])
 
 
-
-
 def grid2volsize(grid_size, patch_size, patch_stride=1):
     """
-    compute the volume size from the grid size and patch information
+    Compute the volume size from the grid size and patch information
 
     Parameters:
         grid_size (vector): the size of the grid in each dimension
@@ -320,9 +346,43 @@ def grid(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1, grid_type
         return (idx, new_vol_size, grid_size)
 
 
-def _row_gen(nparray):
-    for rowi in nparray.shape[0]:
-        yield nparray[rowi, :]
+def patch_gen(vol, patch_size, stride=1, nargout=1):
+    """
+    NOT VERY WELL TESTED
+    generator of patches from volume
+
+    TODO: use .grid() to get sub
+
+    """
+
+    cropped_vol_size = np.array(vol.shape) - np.array(patch_size) + 1
+    assert np.all(cropped_vol_size >= 0), \
+        "patch size needs to be smaller than volume size"
+
+    # get range subs
+    sub = ()
+    for cvs in cropped_vol_size:
+        sub += (list(range(0, cvs, stride)), )
+
+    # get ndgrid of subs
+    ndg = nd.ndgrid(*sub)
+    ndg = [f.flat for f in ndg]
+
+    # generator
+    slicer = lambda f, g: slice(f[idx], f[idx] + g)
+    for idx in range(len(ndg[0])):
+        patch_sub = [slicer(f, g) for f, g in zip(ndg, patch_size)]
+        if nargout == 1:
+            yield vol[patch_sub]
+        else:
+            yield (vol[patch_sub], patch_sub)
+
+
+# local helper functions
+
+# def _row_gen(nparray):
+#     for rowi in nparray.shape[0]:
+#         yield nparray[rowi, :]
 
 def _mod_base(X, Y, base=0):
     """
