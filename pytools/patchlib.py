@@ -55,7 +55,7 @@ def quilt(patches, patch_size, grid_size, patch_stride=1, nan_func=lambda x:np.n
 def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
     """ UNFINISHED """
 
-    assert np.all(np.mod(patch_size, 2) == 1), "patch size is not odd"
+#    assert np.all(np.mod(patch_size, 2) == 1), "patch size is not odd"
     K = patches.shape[2] if len(patches.shape) > 2 else 1
 
     # compute the input target_size and target
