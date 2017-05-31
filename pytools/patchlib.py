@@ -248,6 +248,7 @@ def gridsize(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1):
 
     # modified volume size if starting late
     mod_vol_size = vol_size - start_sub
+    assert np.all(np.array(mod_vol_size) > 0), "New volume size is non-positive"
 
     # compute the number of patches
     # the final volume size will be
@@ -255,6 +256,7 @@ def gridsize(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1):
     # thus the part that is a multiplier of patch_stride is vol_size - patch_overlap
     patch_stride_multiples = mod_vol_size - patch_overlap # not sure?
     grid_size = np.floor(patch_stride_multiples / patch_stride).astype('int')
+    assert np.all(np.array(grid_size) > 0), "Grid size is non-positive"
 
     if nargout == 1:
         return grid_size
