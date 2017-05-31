@@ -1,7 +1,7 @@
 """
 patchlib (python version)
 
-A powerful library for working with N-D patches.
+Library for working with N-D patches.
 Modelled after the MATLAB patchlib (https://github.com/adalca/patchlib)
 """
 
@@ -34,7 +34,7 @@ def quilt(patches, patch_size, grid_size, patch_stride=1, nan_func=lambda x:np.n
         nan_fun (optional): function to compute accross stack layers. default: np.nanmean(x, 0)
 
     Returns:
-        quilt_img: the quilted image
+        quilt_img: the quilted nd volume
     """
 
     patch_stack = stack(patches, patch_size, grid_size, patch_stride)
