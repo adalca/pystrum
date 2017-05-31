@@ -41,6 +41,7 @@ def dice(vol1, vol2, labels=None, nargout=1):
     for idx, lab in enumerate(labels):
         top = 2 * np.sum(np.logical_and(vol1 == lab, vol2 == lab))
         bottom = np.sum(vol1 == lab) + np.sum(vol2 == lab)
+        bottom = np.maximum(bottom, np.finfo(float).eps)  # add epsilon.
         dicem[idx] = top / bottom
 
     if nargout == 1:
