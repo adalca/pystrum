@@ -269,7 +269,7 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
 def range(*args):
     """
     range([start], end [,step])
-    nd version of list(range), where each arg can be a vector of the same length
+    nd version of range, where each arg can be a vector of the same length
 
     Parameters:
         [start] (vector): the start
@@ -296,7 +296,7 @@ def range(*args):
         raise ValueError('unknown arguments')
 
     # prepare
-    idx = tuple([slice(start[i], end[i], step[i]) for i in range(len(end))])
+    idx = [slice(start[i], end[i], step[i]) for i in range(len(end))]
     return idx
 
 def axissplit(arr, axis):
