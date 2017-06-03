@@ -361,6 +361,9 @@ def patch_gen(vol, patch_size, stride=1, nargout=1):
     assert np.all(cropped_vol_size >= 0), \
         "patch size needs to be smaller than volume size"
 
+    if isinstance(stride, int):
+        stride = [stride for f in patch_size]
+
     # get range subs
     sub = ()
     for cvs in cropped_vol_size:
