@@ -266,6 +266,26 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     return vol[idx]
 
 
+def slice(*args):
+    """
+    slice([start], end [,step])
+    nd version of slice, where each arg can be a vector of the same length
+
+    Parameters:
+        [start] (vector): the start
+
+    """
+
+    # if passed in scalars call the built-in range
+    if not isinstance(args[0], (list, tuple, np.ndarray)):
+        return builtins.slice(*args)
+
+    start, end, step = _prep_range(*args)
+
+    # prepare
+    idx = [slice(start[i], end[i], step[i]) for i in range(len(end))]
+    return idx
+
 def range(*args):
     """
     range([start], end [,step])
@@ -278,26 +298,36 @@ def range(*args):
 
     # if passed in scalars call the built-in range
     if not isinstance(args[0], (list, tuple, np.ndarray)):
-        return builtins.range(*args)
+        return np.arange(*args)
 
-    # prepare the start, step and end
-    step = np.ones(len(args[0]), 'int')
-    if len(args) == 1:
-        end = args[0]
-        start = np.zeros(len(end), 'int')
-    elif len(args) == 2:
-        assert len(args[0]) == len(args[1]), "argument vectors do not match"
-        start, end = args
-    elif len(args) == 3:
-        assert len(args[0]) == len(args[1]), "argument vectors do not match"
-        assert len(args[0]) == len(args[2]), "argument vectors do not match"
-        start, end, step = args
-    else:
-        raise ValueError('unknown arguments')
+    start, end, step = _prep_range(*args)
 
     # prepare
-    idx = [slice(start[i], end[i], step[i]) for i in range(len(end))]
+    idx = [range(start[i], end[i], step[i]) for i in range(len(end))]
     return idx
+
+
+def arange(*args):
+    """
+    aange([start], end [,step])
+    nd version of arange, where each arg can be a vector of the same length
+
+    Parameters:
+        [start] (vector): the start
+
+    """
+
+    # if passed in scalars call the built-in range
+    if not isinstance(args[0], (list, tuple, np.ndarray)):
+        return builtins.range(*args)
+
+    start, end, step = _prep_range(*args)
+
+    # prepare
+    idx = [np.arange(start[i], end[i], step[i]) for i in range(len(end))]
+    return idx
+
+
 
 def axissplit(arr, axis):
     """
@@ -357,3 +387,34 @@ def ind2sub_entries(indices, size, **kwargs):
     subvec = np.vstack(sub).transpose()
     # Warning this might be F-style-like stacking... it's a bit confusing
     return subvec
+
+###############################################################################
+# internal
+###############################################################################
+
+def _prep_range(*args):
+    """
+    _prep_range([start], end [,step])
+    prepare the start, end and step for range and arange
+
+    Parameters:
+        [start] (vector): the start
+
+    """
+
+    # prepare the start, step and end
+    step = np.ones(len(args[0]), 'int')
+    if len(args) == 1:
+        end = args[0]
+        start = np.zeros(len(end), 'int')
+    elif len(args) == 2:
+        assert len(args[0]) == len(args[1]), "argument vectors do not match"
+        start, end = args
+    elif len(args) == 3:
+        assert len(args[0]) == len(args[1]), "argument vectors do not match"
+        assert len(args[0]) == len(args[2]), "argument vectors do not match"
+        start, end, step = args
+    else:
+        raise ValueError('unknown arguments')
+
+    return (start, end, step)
