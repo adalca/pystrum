@@ -6,8 +6,8 @@ Modelled after the MATLAB patchlib (https://github.com/adalca/patchlib)
 """
 
 # built-in
-import types
 import sys
+from pprint import pformat
 
 # third party
 import numpy as np
@@ -18,12 +18,17 @@ from imp import reload
 reload(nd)
 
 
-def quilt(patches, patch_size, grid_size, patch_stride=1, nan_func=lambda x:np.nanmean(x, 0)):
+def quilt(patches, patch_size, grid_size,
+          patch_stride=1,
+          nan_func_layers=np.nanmean,
+          nan_func_K=np.nanmean):
     """
     quilt (merge) or reconstruct volume from patch indexes in library
 
+    TODO: allow patches to be generator
+
     Parameters:
-        patches: generator of patches or matrix [N x V x K], with patches(i, :, 1:K)
+        patches: matrix [N x V x K], with patches(i, :, 1:K)
             indicates K patch candidates at location i (e.g. the result of a 3-nearest
             neightbours search). V = prod(patch_size); N = prod(grid_size)
         patch_size: vector indicating the patch size
@@ -31,14 +36,29 @@ def quilt(patches, patch_size, grid_size, patch_stride=1, nan_func=lambda x:np.n
             OR
             specification of the target image size instead of the grid_size
         patch_stride (optional, default:1): patch stride (spacing), default is 1 (sliding window)
-        nan_fun (optional): function to compute accross stack layers. default: np.nanmean(x, 0)
+        nan_func_layers (optional): function to compute accross stack layers. default: np.nanmean
+        nan_func_K (optional): function to compute accross K (nd+1th dim). default: np.nanmean
 
     Returns:
         quilt_img: the quilted nd volume
     """
 
+    # input checks
+    assert patches.ndim == 2 or patches.ndim == 3, 'patches should be [NxV] or [NxVxK]'
+    assert patches.shape[1] == np.prod(patch_size), \
+    "patches V (%d) does not match patch size V (%d)" % (patches.shape[1], np.prod(patch_size))
+    nb_dims = len(patch_size)
+
+    # stack patches
     patch_stack = stack(patches, patch_size, grid_size, patch_stride)
-    return nan_func(patch_stack)
+
+    # quilt via nan_funs
+    quilted_vol_k = nan_func_layers(patch_stack, 0)
+    quilted_vol = nan_func_K(quilted_vol_k, nb_dims)
+    assert quilted_vol.ndim == len(patch_size), "patchlib: problem with dimensions after quilt"
+
+    # done, yey! time to celebrate - maybe visualize the quilted volume?
+    return quilted_vol
 
 
 def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
@@ -50,8 +70,10 @@ def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
     information about the interplay between patch_size, grid_size and patchOverlap, see
     patchlib.grid.
 
+    TODO: allow patches to be generator
+
     Parameters:
-        patches: generator of patches or matrix [N x V x K], with patches(i, :, 1:K)
+        patches: matrix [N x V x K], with patches(i, :, 1:K)
             indicates K patch candidates at location i (e.g. the result of a 3-nearest
             neightbours search). V = prod(patch_size); N = prod(grid_size)
         patch_size: vector indicating the patch size
@@ -139,7 +161,7 @@ def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
             # put the patches in the layers
             sub = [*grid_sub[pidx, :], 0]
             endsub = np.array(sub) + np.array([*patch_size, K])
-            rge = nd.range(sub, endsub)
+            rge = nd.slice(sub, endsub)
             layer_stack[rge] = patch
 
             # update input matching matrix
@@ -290,7 +312,7 @@ def grid(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1, grid_type
         grid_type ('idx' or 'sub', optional): how to describe the grid, in linear index (idx)
             or nd subscripts ('sub'). sub will be a nb_patches x nb_dims ndarray. This is
             equivalent to sub = ind2sub(vol_size, idx), but is done faster inside this function.
-            [TODO: or it was in MATLAB, this might not be true in python anymore]
+            [TODO: or it was faster in MATLAB, this might not be true in python anymore]
 
     Returns:
         idx nd array only if nargout is 1, or (idx, new_vol_size) if nargout is 2,
@@ -332,7 +354,7 @@ def grid(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1, grid_type
 
     # get the nd grid
     # if want subs, this is the faster way to compute in MATLAB (rather than ind -> ind2sub)
-    # TODO: need to investigate for python
+    # TODO: need to investigate for python, maybe use np.ix_ ?
     idx = nd.ndgrid(*xvec)
     if grid_type == 'idx':
         # if want index, this is the faster way to compute (rather than sub -> sub2ind
@@ -357,17 +379,24 @@ def patch_gen(vol, patch_size, stride=1, nargout=1):
 
     """
 
+    # some parameter checking
+    if isinstance(stride, int):
+        stride = [stride for f in patch_size]
+    assert len(vol.shape) == len(patch_size), \
+        "vol shape %s and patch size %s do not match dimensions" \
+        % (pformat(vol.shape), pformat(patch_size))
+    assert len(vol.shape) == len(stride), \
+        "vol shape %s and patch stride %s do not match dimensions" \
+        % (pformat(vol.shape), pformat(stride))
+
     cropped_vol_size = np.array(vol.shape) - np.array(patch_size) + 1
     assert np.all(cropped_vol_size >= 0), \
         "patch size needs to be smaller than volume size"
 
-    if isinstance(stride, int):
-        stride = [stride for f in patch_size]
-
     # get range subs
     sub = ()
-    for cvs in cropped_vol_size:
-        sub += (list(range(0, cvs, stride)), )
+    for idx, cvs in enumerate(cropped_vol_size):
+        sub += (list(range(0, cvs, stride[idx])), )
 
     # get ndgrid of subs
     ndg = nd.ndgrid(*sub)
@@ -385,23 +414,19 @@ def patch_gen(vol, patch_size, stride=1, nargout=1):
 
 # local helper functions
 
-# def _row_gen(nparray):
-#     for rowi in nparray.shape[0]:
-#         yield nparray[rowi, :]
-
-def _mod_base(X, Y, base=0):
+def _mod_base(num, div, base=0):
     """
     modulo with respect to a specific base numbering system
-    i.e. returns base + ((X - base) % Y)
-    x = modBase(X, Y) behaves like X % Y
+    i.e. returns base + ((num - base) % div)
+    modBase(num, div) behaves like num % div
 
     Parameters:
-        X (array_like): divident
-        Y (array_like): divisor
+        num (array_like): divident
+        div (array_like): divisor
         base (optional, default 0): the base
 
     Returns:
         the modulo
     """
 
-    return base + np.mod(X - base, Y)
+    return base + np.mod(num - base, div)
