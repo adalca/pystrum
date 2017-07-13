@@ -9,6 +9,7 @@ import builtins
 import numpy as np
 import scipy as sp
 import scipy.ndimage
+from scipy.spatial import ConvexHull
 
 
 def boundingbox(bwvol):
@@ -103,6 +104,13 @@ def bw2sdtrf(bwvol):
     # combine the positive and negative map
     return posdst * notbwvol - negdst * bwvol
 
+
+def bw_convex_hull(bwvol):
+    # transform bw to mesh.
+    grid = volsize2ndgrid(bwvol.shape)
+    # get the 1 points
+    q = np.concatenate([grid[d].flat for d in bwvol.ndims], 1)
+    return q
 
 def bw2contour(bwvol, type='both'):
     """
@@ -371,6 +379,14 @@ def ind2sub(indices, size, **kwargs):
     """
     return np.unravel_index(indices, size, **kwargs)
 
+
+def centroid(im):
+    """
+    compute centroid of a probability ndimage in 0/1
+    """
+    volgrid = volsize2ndgrid(im.shape)
+    prob = [np.array(im) * np.array(volgrid[d]) for d in range(len(im.shape))]
+    return [np.sum(p.flat) / np.sum(im) for p in prob]
 
 
 
