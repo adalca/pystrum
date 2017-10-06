@@ -112,7 +112,7 @@ def bw_convex_hull(bwvol):
     q = np.concatenate([grid[d].flat for d in bwvol.ndims], 1)
     return q
 
-def bw2contour(bwvol, type='both'):
+def bw2contour(bwvol, type='both', thr=1.01):
     """
     computes the contour of island(s) on a nd logical volume
 
@@ -139,12 +139,12 @@ def bw2contour(bwvol, type='both'):
     sdtrf = bw2sdtrf(bwvol)
 
     if type == 'inner':
-        return np.logical_and(sdtrf <= 0, sdtrf > -1.0001)
+        return np.logical_and(sdtrf <= 0, sdtrf > -thr)
     elif type == 'outer':
-        return np.logical_and(sdtrf >= 0, sdtrf < 1.0001)
+        return np.logical_and(sdtrf >= 0, sdtrf < thr)
     else:
         assert type == 'both', 'type should only be inner, outer or both'
-        return np.abs(sdtrf) < 1.01
+        return np.abs(sdtrf) < thr
 
 
 def ndgrid(*args, **kwargs):
@@ -386,7 +386,7 @@ def centroid(im):
     """
     volgrid = volsize2ndgrid(im.shape)
     prob = [np.array(im) * np.array(volgrid[d]) for d in range(len(im.shape))]
-    return [np.sum(p.flat) / np.sum(im) for p in prob]
+    return [np.sum(p.flat) / np.sum(im.shape) for p in prob]
 
 
 
