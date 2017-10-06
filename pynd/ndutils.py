@@ -271,7 +271,7 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     #     idx.append(slice(start[i], end[i]))
     idx = range(start, end)
 
-    return vol[idx]
+    return vol[np.ix_(*idx)]
 
 
 def slice(*args):
