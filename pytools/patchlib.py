@@ -8,6 +8,7 @@ Modelled after the MATLAB patchlib (https://github.com/adalca/patchlib)
 # built-in
 import sys
 from pprint import pformat
+from random import shuffle
 
 # third party
 import numpy as np
@@ -16,6 +17,8 @@ import numpy as np
 import pynd.ndutils as nd
 from imp import reload
 reload(nd)
+
+
 
 
 def quilt(patches, patch_size, grid_size,
@@ -370,7 +373,7 @@ def grid(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1, grid_type
         return (idx, new_vol_size, grid_size)
 
 
-def patch_gen(vol, patch_size, stride=1, nargout=1):
+def patch_gen(vol, patch_size, stride=1, nargout=1, rand=False):
     """
     NOT VERY WELL TESTED
     generator of patches from volume
@@ -404,7 +407,10 @@ def patch_gen(vol, patch_size, stride=1, nargout=1):
 
     # generator
     slicer = lambda f, g: slice(f[idx], f[idx] + g)
-    for idx in range(len(ndg[0])):
+    rng = list(range(len(ndg[0])))
+    if rand:
+        shuffle(rng)
+    for idx in rng:
         patch_sub = [slicer(f, g) for f, g in zip(ndg, patch_size)]
         if nargout == 1:
             yield vol[patch_sub]
