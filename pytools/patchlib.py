@@ -21,7 +21,9 @@ reload(nd)
 
 
 
-def quilt(patches, patch_size, grid_size,
+def quilt(patches,
+          patch_size,
+          grid_size,
           patch_stride=1,
           nan_func_layers=np.nanmean,
           nan_func_K=np.nanmean):
@@ -373,7 +375,7 @@ def grid(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1, grid_type
         return (idx, new_vol_size, grid_size)
 
 
-def patch_gen(vol, patch_size, stride=1, nargout=1, rand=False):
+def patch_gen(vol, patch_size, stride=1, nargout=1, rand=False, rand_seed=None):
     """
     NOT VERY WELL TESTED
     generator of patches from volume
@@ -401,17 +403,26 @@ def patch_gen(vol, patch_size, stride=1, nargout=1, rand=False):
     for idx, cvs in enumerate(cropped_vol_size):
         sub += (list(range(0, cvs, stride[idx])), )
 
+    # check the size
+    gs = gridsize(vol.shape, patch_size, patch_stride=stride)
+    assert [len(f) for f in sub] == list(gs), 'Patch gen side failure'
+
     # get ndgrid of subs
     ndg = nd.ndgrid(*sub)
     ndg = [f.flat for f in ndg]
 
     # generator
-    slicer = lambda f, g: slice(f[idx], f[idx] + g)
     rng = list(range(len(ndg[0])))
     if rand:
-        shuffle(rng)
+        if rand_seed is None:
+            shuffle(rng)
+        else:
+            shuffle(rng, lambda: rand_seed)
+
     for idx in rng:
+        slicer = lambda f, g: slice(f[idx], f[idx] + g)
         patch_sub = [slicer(f, g) for f, g in zip(ndg, patch_size)]
+        # print(patch_sub)
         if nargout == 1:
             yield vol[patch_sub]
         else:
