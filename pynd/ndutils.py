@@ -203,7 +203,7 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     crop : nd tuple, optional
         either tuple of integers or tuple of tuples.
         If tuple of integers, will crop that amount from both sides.
-        if tuple of tuples, expect each inner tuple to specify (start, end)
+        if tuple of tuples, expect each inner tuple to specify (crop from start, crop from end)
     start : int, optional
         start of cropped volume
     end : int, optional
@@ -218,10 +218,10 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
 
     # check which parameters are passed
     passed_new_vol_size = new_vol_size is not None
-    passed_crop_size = (crop is not None) and (not isinstance(crop[0], tuple))
+    passed_crop_size = (crop is not None) and (not isinstance(crop[0], (tuple, list)))
     passed_start = start is not None
     passed_end = end is not None
-    passed_crop = crop is not None and (isinstance(crop[0], tuple))
+    passed_crop = crop is not None and (isinstance(crop[0], (tuple, list)))
 
     # from whatever is passed, we want to obtain start and end.
     if passed_start and passed_end:
