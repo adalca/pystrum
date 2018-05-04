@@ -255,7 +255,11 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     elif passed_crop:
         assert not (passed_start or passed_end), "Cannot pass both passed_crop and start or end"
         start = [val[0] for val in crop]
-        end = vol_size - [val[1] for val in crop]
+        
+        if isinstance(crop[0], (list, tuple)):
+            end = [val[1] for val in crop]
+        else:
+            end = vol_size - [val[0] for val in crop]
 
     elif passed_start: # nothing else is passed
         end = vol_size
