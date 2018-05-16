@@ -257,9 +257,9 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
         start = [val[0] for val in crop]
         
         if isinstance(crop[0], (list, tuple)):
-            end = [val[1] for val in crop]
+            end = vol_size - [val[1] for val in crop]
         else:
-            end = vol_size - [val[0] for val in crop]
+            end = vol_size - crop
 
     elif passed_start: # nothing else is passed
         end = vol_size
@@ -267,7 +267,6 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     else:
         assert passed_end
         start = vol_size * 0
-
 
     # get indices. Since we want this to be an nd-volume crop function, we
     # idx = []
