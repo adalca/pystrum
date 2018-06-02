@@ -9,6 +9,8 @@ Modelled after the MATLAB patchlib (https://github.com/adalca/patchlib)
 import sys
 from pprint import pformat
 from random import shuffle
+import random
+
 
 # third party
 import numpy as np
@@ -414,10 +416,10 @@ def patch_gen(vol, patch_size, stride=1, nargout=1, rand=False, rand_seed=None):
     # generator
     rng = list(range(len(ndg[0])))
     if rand:
-        if rand_seed is None:
-            shuffle(rng)
-        else:
-            shuffle(rng, lambda: rand_seed)
+        if rand_seed is not None:
+            random.seed(rand_seed)
+        shuffle(rng)
+    
 
     for idx in rng:
         slicer = lambda f, g: slice(f[idx], f[idx] + g)
