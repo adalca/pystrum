@@ -72,7 +72,7 @@ def seg_overlap(vol, seg, do_contour=True, do_rgb=True, cmap=None, thickness=1.0
     # compute a rgb-contour map
     if do_rgb:
         if cmap is None:
-            nb_labels = np.max(seg) + 1
+            nb_labels = np.max(seg).astype(int) + 1
             colors = np.random.random((nb_labels, 3)) * 0.5 + 0.5
             colors[0, :] = [0, 0, 0]
         else:
