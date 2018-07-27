@@ -218,42 +218,36 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
 
     # check which parameters are passed
     passed_new_vol_size = new_vol_size is not None
-    passed_crop_size = (crop is not None) and (not isinstance(crop[0], (tuple, list)))
     passed_start = start is not None
     passed_end = end is not None
-    passed_crop = crop is not None and (isinstance(crop[0], (tuple, list)))
+    passed_crop = crop is not None
 
     # from whatever is passed, we want to obtain start and end.
     if passed_start and passed_end:
-        assert not (passed_new_vol_size or passed_crop_size or passed_crop), \
+        assert not (passed_new_vol_size or passed_crop), \
             "If passing start and end, don't pass anything else"
 
-    elif passed_new_vol_size or passed_crop_size:
+    elif passed_new_vol_size:
         # compute new volume size and crop_size
-        if passed_new_vol_size:
-            assert not (passed_crop_size or passed_crop), \
-                "Cannot use both new volume size and crop info"
-
-        elif passed_crop_size:
-            assert not passed_crop, "Cannot use both crop_size and crop"
-            new_vol_size = vol_size - 2 * np.asarray(crop)
+        assert not passed_crop, "Cannot use both new volume size and crop info"
 
         # compute start and end
         if passed_start:
-            assert not passed_end, "When giving passed_crop_size, cannot pass both start and end"
+            assert not passed_end, "When giving passed_new_vol_size, cannot pass both start and end"
             end = start + new_vol_size
 
         elif passed_end:
-            assert not passed_start, "When giving passed_crop_size, cannot pass both start and end"
+            assert not passed_start, "When giving passed_new_vol_size, cannot pass both start and end"
             start = end - new_vol_size
 
         else: # none of crop_size, crop, start or end are passed
-            mid = np.asarray(new_vol_size) // 2 # // does integer division
+            mid = np.asarray(vol_size) // 2
             start = mid - (new_vol_size // 2)
             end = start + new_vol_size
 
     elif passed_crop:
-        assert not (passed_start or passed_end), "Cannot pass both passed_crop and start or end"
+        assert not (passed_start or passed_end or new_vol_size), \
+            "Cannot pass both passed_crop and start or end or new_vol_size"
         start = [val[0] for val in crop]
         
         if isinstance(crop[0], (list, tuple)):
