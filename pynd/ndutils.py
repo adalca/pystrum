@@ -233,11 +233,13 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
 
         # compute start and end
         if passed_start:
-            assert not passed_end, "When giving passed_new_vol_size, cannot pass both start and end"
+            assert not passed_end, \
+                "When giving passed_new_vol_size, cannot pass both start and end"
             end = start + new_vol_size
 
         elif passed_end:
-            assert not passed_start, "When giving passed_new_vol_size, cannot pass both start and end"
+            assert not passed_start, \
+                "When giving passed_new_vol_size, cannot pass both start and end"
             start = end - new_vol_size
 
         else: # none of crop_size, crop, start or end are passed
