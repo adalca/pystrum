@@ -40,7 +40,6 @@ def boundingbox(bwvol):
     return np.concatenate((starts, ends), 0)
 
 
-
 def bwdist(bwvol):
     """
     positive distance transform from positive entries in logical image
@@ -65,7 +64,6 @@ def bwdist(bwvol):
 
     # get distance
     return scipy.ndimage.morphology.distance_transform_edt(revbwvol)
-
 
 
 def bw2sdtrf(bwvol):
@@ -105,12 +103,45 @@ def bw2sdtrf(bwvol):
     return posdst * notbwvol - negdst * bwvol
 
 
+bw_to_sdtrf = bw2sdtrf
+
+
+def bw_grid(vol_shape, spacing):
+    """
+    draw a black and white ND grid.
+
+    Parameters
+    ----------
+        vol_shape: expected volume size
+        spacing: scalar or list the same size as vol_shape
+
+    Returns
+    -------
+        grid_vol: a volume the size of vol_shape with white lines on black background
+    """
+
+    # check inputs
+    if not isinstance(spacing, (list, tuple)):
+        spacing = [spacing] * len(vol_shape)
+    assert len(vol_shape) == len(spacing)
+
+    # go through axes
+    grid_image = np.zeros(vol_shape)
+    for d, v in enumerate(vol_shape):
+        rng = [np.arange(0, f) for f in vol_shape]
+        rng[d] = np.append(np.arange(0, v, spacing[d]), -1)
+        grid_image[ndgrid(*rng)] = 1
+
+    return grid_image
+
+
 def bw_convex_hull(bwvol):
-    # transform bw to mesh.
+    # transform bw to nd grid.
     grid = volsize2ndgrid(bwvol.shape)
+
     # get the 1 points
-    q = np.concatenate([grid[d].flat for d in bwvol.ndims], 1)
-    return q
+    return np.concatenate([grid[d].flat for d in bwvol.ndims], 1)
+
 
 def bw2contour(bwvol, type='both', thr=1.01):
     """
@@ -147,26 +178,7 @@ def bw2contour(bwvol, type='both', thr=1.01):
         return np.abs(sdtrf) < thr
 
 
-def ndgrid(*args, **kwargs):
-    """
-    Disclaimer: This code is taken directly from the scitools package [1]
-    Since at the time of writing scitools predominantly requires python 2.7 while we work with 3.5+
-    To avoid issues, we copy the quick code here.
-
-    Same as calling ``meshgrid`` with *indexing* = ``'ij'`` (see
-    ``meshgrid`` for documentation).
-    """
-    kwargs['indexing'] = 'ij'
-    return np.meshgrid(*args, **kwargs)
-
-
-def volsize2ndgrid(volsize):
-    """
-    return the dense nd-grid for the volume with size volsize
-    essentially return the ndgrid fpr
-    """
-    ranges = [np.arange(e) for e in volsize]
-    return ndgrid(*ranges)
+bw_to_contour = bw2contour
 
 
 def bw_sphere(volshape, rad, loc=None):
@@ -188,6 +200,28 @@ def bw_sphere(volshape, rad, loc=None):
 
     # draw the sphere
     return dst <= rad
+
+
+def ndgrid(*args, **kwargs):
+    """
+    Disclaimer: This code is taken directly from the scitools package [1]
+    Since at the time of writing scitools predominantly requires python 2.7 while we work with 3.5+
+    To avoid issues, we copy the quick code here.
+
+    Same as calling ``meshgrid`` with *indexing* = ``'ij'`` (see
+    ``meshgrid`` for documentation).
+    """
+    kwargs['indexing'] = 'ij'
+    return np.meshgrid(*args, **kwargs)
+
+
+def volsize2ndgrid(volsize):
+    """
+    return the dense nd-grid for the volume with size volsize
+    essentially return the ndgrid fpr
+    """
+    ranges = [np.arange(e) for e in volsize]
+    return ndgrid(*ranges)
 
 
 def volcrop(vol, new_vol_shape=None, start=None, end=None, crop=None):
@@ -308,6 +342,7 @@ def slice(*args):
     idx = [slice(start[i], end[i], step[i]) for i in range(len(end))]
     return idx
 
+
 def range(*args):
     """
     range([start], end [,step])
@@ -350,7 +385,6 @@ def arange(*args):
     return idx
 
 
-
 def axissplit(arr, axis):
     """
     Split a nd volume along an exis into n volumes, where n is the size of the axis dim.
@@ -372,8 +406,6 @@ def axissplit(arr, axis):
     """
     nba = arr.shape[axis]
     return np.split(arr, nba, axis=axis)
-
-
 
 
 def sub2ind(arr, size, **kwargs):
@@ -403,7 +435,6 @@ def centroid(im):
     return [np.sum(p.flat) / np.sum(im.shape) for p in prob]
 
 
-
 def ind2sub_entries(indices, size, **kwargs):
     """
     returns a nb_entries -by- nb_dims (essentially the transpose of ind2sub)
@@ -418,39 +449,6 @@ def ind2sub_entries(indices, size, **kwargs):
     # Warning this might be F-style-like stacking... it's a bit confusing
     return subvec
 
-
-def bw_grid(vol_shape, spacing):
-    """
-    draw a black and white ND grid.
-
-    Parameters
-    ----------
-        vol_shape: expected volume size
-        spacing: scalar or list the same size as vol_shape
-
-    Returns
-    -------
-        grid_vol: a volume the size of vol_shape with white lines on black background
-    """
-
-    # check inputs
-    if not isinstance(spacing, (list, tuple)):
-        spacing = [spacing] * len(vol_shape)
-    assert len(vol_shape) == len(spacing)
-
-    # go through all indices
-    grid_image = np.zeros(vol_shape)
-    all_idx = list(np.ix_(*[range(0, f) for f in vol_shape]))
-    for axis in range(len(vol_shape)):
-
-        # compute the range of lines do graw for this axes
-        rng = [f for f in range(0, vol_shape[axis], spacing[axis])] + [-1]
-        for idx in rng:
-            this_rng = [f for f in all_idx]
-            this_rng[axis] = [idx]
-            grid_image[this_rng] = 1
-
-    return grid_image
 
     
 
