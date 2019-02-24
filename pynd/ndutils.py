@@ -190,7 +190,7 @@ def bw_sphere(volshape, rad, loc=None):
     return dst <= rad
 
 
-def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
+def volcrop(vol, new_vol_shape=None, start=None, end=None, crop=None):
     """
     crop a nd volume.
 
@@ -198,7 +198,7 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     ----------
     vol : nd array
         the nd-dimentional volume to crop. If only specified parameters, is returned intact
-    new_vol_size : nd vector, optional
+    new_vol_shape : nd vector, optional
         the new size of the cropped volume
     crop : nd tuple, optional
         either tuple of integers or tuple of tuples.
@@ -214,56 +214,56 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     cropped_vol : nd array
     """
 
-    vol_size = np.asarray(vol.shape)
+    vol_shape = np.asarray(vol.shape)
 
     # check which parameters are passed
-    passed_new_vol_size = new_vol_size is not None
+    passed_new_vol_shape = new_vol_shape is not None
     passed_start = start is not None
     passed_end = end is not None
     passed_crop = crop is not None
 
     # from whatever is passed, we want to obtain start and end.
     if passed_start and passed_end:
-        assert not (passed_new_vol_size or passed_crop), \
+        assert not (passed_new_vol_shape or passed_crop), \
             "If passing start and end, don't pass anything else"
 
-    elif passed_new_vol_size:
+    elif passed_new_vol_shape:
         # compute new volume size and crop_size
         assert not passed_crop, "Cannot use both new volume size and crop info"
 
         # compute start and end
         if passed_start:
             assert not passed_end, \
-                "When giving passed_new_vol_size, cannot pass both start and end"
-            end = start + new_vol_size
+                "When giving passed_new_vol_shape, cannot pass both start and end"
+            end = start + new_vol_shape
 
         elif passed_end:
             assert not passed_start, \
-                "When giving passed_new_vol_size, cannot pass both start and end"
-            start = end - new_vol_size
+                "When giving passed_new_vol_shape, cannot pass both start and end"
+            start = end - new_vol_shape
 
         else: # none of crop_size, crop, start or end are passed
-            mid = np.asarray(vol_size) // 2
-            start = mid - (new_vol_size // 2)
-            end = start + new_vol_size
+            mid = np.asarray(vol_shape) // 2
+            start = mid - (new_vol_shape // 2)
+            end = start + new_vol_shape
 
     elif passed_crop:
-        assert not (passed_start or passed_end or new_vol_size), \
-            "Cannot pass both passed_crop and start or end or new_vol_size"
+        assert not (passed_start or passed_end or new_vol_shape), \
+            "Cannot pass both passed_crop and start or end or new_vol_shape"
         
         if isinstance(crop[0], (list, tuple)):
-            end = vol_size - [val[1] for val in crop]
+            end = vol_shape - [val[1] for val in crop]
             start = [val[0] for val in crop]
         else:
-            end = vol_size - crop
+            end = vol_shape - crop
             start = crop
 
     elif passed_start: # nothing else is passed
-        end = vol_size
+        end = vol_shape
 
     else:
         assert passed_end
-        start = vol_size * 0
+        start = vol_shape * 0
 
     # get indices. Since we want this to be an nd-volume crop function, we
     # idx = []
@@ -419,32 +419,32 @@ def ind2sub_entries(indices, size, **kwargs):
     return subvec
 
 
-def bw_grid(vol_size, spacing):
+def bw_grid(vol_shape, spacing):
     """
     draw a black and white ND grid.
 
     Parameters
     ----------
-        vol_size: expected volume size
-        spacing: scalar or list the same size as vol_size
+        vol_shape: expected volume size
+        spacing: scalar or list the same size as vol_shape
 
     Returns
     -------
-        grid_vol: a volume the size of vol_size with white lines on black background
+        grid_vol: a volume the size of vol_shape with white lines on black background
     """
 
     # check inputs
     if not isinstance(spacing, (list, tuple)):
-        spacing = [spacing] * len(vol_size)
-    assert len(vol_size) == len(spacing)
+        spacing = [spacing] * len(vol_shape)
+    assert len(vol_shape) == len(spacing)
 
     # go through all indices
-    grid_image = np.zeros(vol_size)
-    all_idx = list(np.ix_(*[range(0, f) for f in vol_size]))
-    for axis in range(len(vol_size)):
+    grid_image = np.zeros(vol_shape)
+    all_idx = list(np.ix_(*[range(0, f) for f in vol_shape]))
+    for axis in range(len(vol_shape)):
 
         # compute the range of lines do graw for this axes
-        rng = [f for f in range(0, vol_size[axis], spacing[axis])] + [-1]
+        rng = [f for f in range(0, vol_shape[axis], spacing[axis])] + [-1]
         for idx in rng:
             this_rng = [f for f in all_idx]
             this_rng[axis] = [idx]
