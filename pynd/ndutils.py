@@ -272,9 +272,23 @@ def volcrop(vol, new_vol_size=None, start=None, end=None, crop=None):
     # idx = []
     # for i in range(len(end)):
     #     idx.append(slice(start[i], end[i]))
-    idx = range(start, end)
 
-    return vol[np.ix_(*idx)]
+    # special case 1, 2, 3 since it's faster with slicing
+    if len(start) == 1:
+        rvol = vol[start[0]:end[0]]
+    elif len(start) == 2:
+        rvol = vol[start[0]:end[0], start[1]:end[1]]
+    elif len(start) == 3:
+        rvol = vol[start[0]:end[0], start[1]:end[1], start[2]:end[2]]
+    elif len(start) == 4:
+        rvol = vol[start[0]:end[0], start[1]:end[1], start[2]:end[2], start[3]:end[3]]
+    elif len(start) == 5:
+        rvol = vol[start[0]:end[0], start[1]:end[1], start[2]:end[2], start[3]:end[3], start[4]:end[4]]
+    else:
+        idx = range(start, end)
+        rvol = vol[np.ix_(*idx)]
+
+    return rvol
 
 
 def slice(*args):
@@ -406,6 +420,43 @@ def ind2sub_entries(indices, size, **kwargs):
     subvec = np.vstack(sub).transpose()
     # Warning this might be F-style-like stacking... it's a bit confusing
     return subvec
+
+
+def bw_grid(vol_size, spacing):
+    """
+    draw a black and white ND grid.
+
+    Parameters
+    ----------
+        vol_size: expected volume size
+        spacing: scalar or list the same size as vol_size
+
+    Returns
+    -------
+        grid_vol: a volume the size of vol_size with white lines on black background
+    """
+
+    # check inputs
+    if not isinstance(spacing, (list, tuple)):
+        spacing = [spacing] * len(vol_size)
+    assert len(vol_size) == len(spacing)
+
+    # go through all indices
+    grid_image = np.zeros(vol_size)
+    all_idx = list(np.ix_(*[range(0, f) for f in vol_size]))
+    for axis in range(len(vol_size)):
+
+        # compute the range of lines do graw for this axes
+        rng = [f for f in range(0, vol_size[axis], spacing[axis])] + [-1]
+        for idx in rng:
+            this_rng = [f for f in all_idx]
+            this_rng[axis] = [idx]
+            grid_image[this_rng] = 1
+
+    return grid_image
+
+    
+
 
 ###############################################################################
 # internal
