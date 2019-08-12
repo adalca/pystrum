@@ -106,7 +106,7 @@ def bw2sdtrf(bwvol):
 bw_to_sdtrf = bw2sdtrf
 
 
-def bw_grid(vol_shape, spacing):
+def bw_grid(vol_shape, spacing, thickness=1):
     """
     draw a black and white ND grid.
 
@@ -129,8 +129,9 @@ def bw_grid(vol_shape, spacing):
     grid_image = np.zeros(vol_shape)
     for d, v in enumerate(vol_shape):
         rng = [np.arange(0, f) for f in vol_shape]
-        rng[d] = np.append(np.arange(0, v, spacing[d]), -1)
-        grid_image[ndgrid(*rng)] = 1
+        for t in range(thickness):
+            rng[d] = np.append(np.arange(0+t, v, spacing[d]), -1)
+            grid_image[ndgrid(*rng)] = 1
 
     return grid_image
 
