@@ -223,6 +223,7 @@ def volsize2ndgrid(volsize):
     ranges = [np.arange(e) for e in volsize]
     return ndgrid(*ranges)
 
+volsize_to_ndgrid = volsize2ndgrid
 
 def volcrop(vol, new_vol_shape=None, start=None, end=None, crop=None):
     """
@@ -450,7 +451,60 @@ def ind2sub_entries(indices, size, **kwargs):
     return subvec
 
 
+def gaussian_kernel(sigma, windowsize=None, indexing='ij'):
+    """
+    Create a gaussian kernel nd image
+
+    sigma will be a number of a list of numbers.
+
+    # some guidance from MATLAB function
+    https://github.com/adalca/mivt/blob/master/src/gaussFilt.m
+    and tensorflow function in
+    https://github.com/adalca/neuron/blob/master/neuron/utils.py
+
+    Parameters:
+        sigma: scalar or list of scalars
+        windowsize (optional): scalar or list of scalars indicating the shape of the kernel
     
+    Returns:
+        ND kernel the same dimensiosn as the number of sigmas.
+    """
+
+    if not isinstance(sigma, (list, tuple)):
+        sigma = [sigma]
+    sigma = [np.maximum(f, np.finfo(float).eps) for f in sigma]
+
+    nb_dims = len(sigma)
+
+    # compute windowsize
+    if windowsize is None:
+        windowsize = [np.round(f * 3) * 2 + 1 for f in sigma]
+
+    if len(sigma) != len(windowsize):
+        raise ValueError('sigma and windowsize should have the same length.'
+                         'Got vectors: ' + str(sigma) + 'and' + str(windowsize))
+
+    assert indexing == 'ij', 'Only ij indexing implemented so far'
+
+    # ok, let's get to work.
+    mid = [(w - 1)/2 for w in windowsize]
+
+    # list of volume ndgrid
+    # N-long list, each entry of shape volshape
+    mesh = volsize2ndgrid(windowsize)  
+
+    # compute independent gaussians
+    diff = [mesh[f] - mid[f] for f in range(len(windowsize))]
+    exp_term = [- np.square(diff[f])/(2 * (sigma[f]**2)) for f in range(nb_dims)]
+    norms = [exp_term[f] - np.log(sigma[f] * np.sqrt(2 * np.pi)) for f in range(nb_dims)]
+
+    # add an all-ones entry and transform into a large matrix
+    norms_matrix = np.stack(norms, axis=-1)  # *volshape x N
+    g = np.sum(norms_matrix, -1)  # volshape
+    g = np.exp(g)
+    g /= np.sum(g)
+
+    return g
 
 
 ###############################################################################
