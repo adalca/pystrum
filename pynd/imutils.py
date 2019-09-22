@@ -1,6 +1,6 @@
 ''' image utilities '''
 
-from numpy import np
+import numpy as np
 
 def gray2color(gray, color):
     ''' 
@@ -8,4 +8,15 @@ def gray2color(gray, color):
     untested
     '''
 
-    return np.concatenate((gray * c for c in color), 2)
+    return np.stack((gray * c for c in color), -1)
+
+
+def rgb2gray(rgb, mixing=[0.2989, 0.5870, 0.1140], keepdims = False):
+    ''' 
+    transform a rgb image (i.e. array with last dimension of 3) to grayscale
+    (which reduces the last dimension)
+    '''
+    gray = np.dot(rgb[...,:3], mixing)
+    if keepdims:
+        gray = gray[..., np.newaxis]
+    return gray
