@@ -5,7 +5,8 @@ Tested on Python 3.5
 Contact: adalca@csail.mit.edu
 """
 
-import builtins
+import builtins, sys
+
 import numpy as np
 import scipy as sp
 import scipy.ndimage
@@ -280,7 +281,7 @@ def volcrop(vol, new_vol_shape=None, start=None, end=None, crop=None):
 
         else: # none of crop_size, crop, start or end are passed
             mid = np.asarray(vol_shape) // 2
-            start = mid - (new_vol_shape // 2)
+            start = mid - (np.asarray(new_vol_shape) // 2)
             end = start + new_vol_shape
 
     elif passed_crop:
@@ -506,6 +507,72 @@ def gaussian_kernel(sigma, windowsize=None, indexing='ij'):
     g /= np.sum(g)
 
     return g
+
+
+def perlin_vol(vol_shape, min_scale=0, max_scale=None, interp_order=1, wt_type='monotonic'):
+    """
+    generate perlin noise ND volume 
+
+    rough algorithm:
+    
+    vol = zeros
+    for scale in scales:
+        rand = generate random uniform noise at given scale
+        vol += wt * upsampled rand to vol_shape 
+        
+
+    Parameters
+    ----------
+    vol_shape: list indicating input shape.
+    min_scale: higher min_scale = less high frequency noise
+      the minimum rescale vol_shape/(2**min_scale), min_scale of 0 (default) 
+      means start by not rescaling, and go down.
+    max_scale: maximum scale, if None computes such that smallest volume shape is [1]
+    interp_order: interpolation (upscale) order, as used in scipy.ndimage.interpolate.zoom
+    wt_type: the weight type between volumes. default: monotonically decreasing with image size.
+      options: 'monotonic', 'random'
+    
+    https://github.com/adalca/matlib/blob/master/matlib/visual/perlin.m
+    loosely inspired from http://nullprogram.com/blog/2007/11/20
+    """
+
+    # input handling
+    assert wt_type in ['monotonic', 'random'], \
+        "wt_type should be in 'monotonic', 'random', got: %s"  % wt_type
+
+    if max_scale is None:
+        max_width = np.max(vol_shape)
+        max_scale = np.ceil(np.log2(max_width)).astype('int')
+
+    # decide on scales:
+    scale_shapes = []
+    wts = []
+    for i in range(min_scale, max_scale + 1):
+        scale_shapes.append(np.ceil([f / (2**i) for f in vol_shape]).astype('int'))
+    
+        # determine weight
+        if wt_type == 'monotonic':
+            wts.append(i + 1)  # larger images (so more high frequencies) get lower weight
+        else:
+            wts.append(np.random.random())
+    wts = np.array(wts)/np.sum(wts)
+
+
+    # get perlin volume
+    vol = np.zeros(vol_shape)
+    for sci, sc in enumerate(scale_shapes):
+
+        # get a small random volume
+        rand_vol = np.random.random(sc)
+        
+        # interpolated rand volume to upper side
+        reshape_factor = [vol_shape[d]/sc[d] for d in range(len(vol_shape))]
+        interp_vol = scipy.ndimage.interpolation.zoom(rand_vol, reshape_factor, order=interp_order)
+
+        # add to existing volume
+        vol = vol + wts[sci] * interp_vol
+        
+    return vol
 
 
 ###############################################################################
