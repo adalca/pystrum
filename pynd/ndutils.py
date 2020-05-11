@@ -124,7 +124,9 @@ def bw_grid(vol_shape, spacing, thickness=1):
     # check inputs
     if not isinstance(spacing, (list, tuple)):
         spacing = [spacing] * len(vol_shape)
+    spacing = [f+1 for f in spacing]
     assert len(vol_shape) == len(spacing)
+
 
     # go through axes
     grid_image = np.zeros(vol_shape)
