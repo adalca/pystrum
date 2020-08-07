@@ -8,7 +8,7 @@ Contact: adalca@csail.mit.edu
 import numpy as np
 
 
-def dice(vol1, vol2, labels=None, nargout=1):
+def dice(vol1, vol2, labels=None, nargout=1, method='iter'):
     '''
     Dice [1] volume overlap metric
 
@@ -25,6 +25,7 @@ def dice(vol1, vol2, labels=None, nargout=1):
         If this is not provided, Dice is computed on all non-background (non-0) labels
     nargout : optional control of output arguments. if 1, output Dice measure(s).
         if 2, output tuple of (Dice, labels)
+    method : 'iter' (iterating through channels) or 'hist2' (using a histogram)
 
     Output
     ------
