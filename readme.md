@@ -1,6 +1,2 @@
-# pytools
-General python tools
-
-Python Library for ND (n-dimensional) array operations
-
-Medical Image Analysis library for Python
+# pystrum 
+`pystrum` (**py**thon in**strum**entation)  is a general utilities library. 
