@@ -11,16 +11,14 @@ from pprint import pformat
 from random import shuffle
 import random
 
-
 # third party
 import numpy as np
 
 # local
-import pynd.ndutils as nd
+from ..pynd import ndutils as nd
+
 from imp import reload
 reload(nd)
-
-
 
 
 def quilt(patches,
