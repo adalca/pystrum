@@ -11,6 +11,7 @@ import numpy as np
 import scipy as sp
 import scipy.ndimage
 from scipy.spatial import ConvexHull
+from scipy.ndimage.filters import convolve
 
 
 def boundingbox(bwvol):
@@ -41,42 +42,9 @@ def boundingbox(bwvol):
     return np.concatenate((starts, ends), 0)
 
 
-def bwdist(bwvol):
-    """
-    positive distance transform from positive entries in logical image
-
-    Parameters
-    ----------
-    bwvol : nd array
-        The logical volume
-
-    Returns
-    -------
-    possdtrf : nd array
-        the positive distance transform
-
-    See Also
-    --------
-    bw2sdtrf
-    """
-
-    # reverse volume to run scipy function
-    revbwvol = np.logical_not(bwvol)
-
-    # get distance
-    return scipy.ndimage.morphology.distance_transform_edt(revbwvol)
-
-
 def bw2sdtrf(bwvol):
     """
-    computes the signed distance transform from the surface between the
-    binary True/False elements of logical bwvol
-
-    Note: the distance transform on either side of the surface will be +1/-1
-    - i.e. there are no voxels for which the dst should be 0.
-
-    Runtime: currently the function uses bwdist twice. If there is a quick way to
-    compute the surface, bwdist could be used only once.
+    computes the boundary between the binary True/False elements of logical bwvol
 
     Parameters
     ----------
@@ -93,16 +61,16 @@ def bw2sdtrf(bwvol):
     bwdist
     """
 
-    # get the positive transform (outside the positive island)
-    posdst = bwdist(bwvol)
+    # create a second-order difference filter kernel
+    kern = np.array([-1,+2,-1]).reshape([3]+[1]*(bwvol.ndim-1))
 
-    # get the negative transform (distance inside the island)
-    notbwvol = np.logical_not(bwvol)
-    negdst = bwdist(notbwvol)
+    # mark boundaries
+    conv = np.zeros_like(bwvol)
+    for i in range(0,bwvol.ndim):
+        filt = np.swapaxes(kern,0,i)
+        conv = conv + np.abs(convolve(bwvol, filt))
 
-    # combine the positive and negative map
-    return posdst * notbwvol - negdst * bwvol
-
+    return conv > 0
 
 bw_to_sdtrf = bw2sdtrf
 
@@ -174,12 +142,12 @@ def bw2contour(bwvol, type='both', thr=1.01):
     sdtrf = bw2sdtrf(bwvol)
 
     if type == 'inner':
-        return np.logical_and(sdtrf <= 0, sdtrf > -thr)
+        return np.logical_and(sdtrf, bwvol - 0)
     elif type == 'outer':
-        return np.logical_and(sdtrf >= 0, sdtrf < thr)
+        return np.logical_and(sdtrf, 1 - bwvol)
     else:
         assert type == 'both', 'type should only be inner, outer or both'
-        return np.abs(sdtrf) < thr
+        return sdtrf
 
 
 bw_to_contour = bw2contour
