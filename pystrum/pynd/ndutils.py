@@ -11,6 +11,7 @@ import numpy as np
 import scipy as sp
 import scipy.ndimage
 from scipy.spatial import ConvexHull
+from scipy.ndimage.filters import convolve
 
 
 def boundingbox(bwvol):
@@ -104,6 +105,36 @@ def bw2sdtrf(bwvol):
     return posdst * notbwvol - negdst * bwvol
 
 
+def bw2boundary(bwvol):
+    """
+    computes the boundary between the binary True/False elements of logical bwvol
+
+    Parameters
+    ----------
+    bwvol : nd array
+        The logical volume
+
+    Returns
+    -------
+    sdtrf : nd array
+        the signed distance transform
+
+    See Also
+    --------
+    bwdist
+    """
+
+    # create a second-order difference filter kernel
+    kern = np.array([-1,+2,-1]).reshape([3]+[1]*(bwvol.ndim-1))
+
+    # mark boundaries
+    conv = np.zeros_like(bwvol)
+    for i in range(0,bwvol.ndim):
+        filt = np.swapaxes(kern,0,i)
+        conv = conv + np.abs(convolve(bwvol, filt))
+
+    return conv > 0
+
 bw_to_sdtrf = bw2sdtrf
 
 
@@ -147,7 +178,7 @@ def bw_convex_hull(bwvol):
     return np.concatenate([grid[d].flat for d in bwvol.ndims], 1)
 
 
-def bw2contour(bwvol, type='both', thr=1.01):
+def bw2contour(bwvol, type='both', thr=1.01, method='sdt'):
     """
     computes the contour of island(s) on a nd logical volume
 
@@ -170,16 +201,29 @@ def bw2contour(bwvol, type='both', thr=1.01):
     bwdist, bw2dstrf
     """
 
-    # obtain a signed distance transform for the bw volume
-    sdtrf = bw2sdtrf(bwvol)
+    if method == 'sdt':
+         # obtain a signed distance transform for the bw volume
+        sdtrf = bw2sdtrf(bwvol)
+        if type == 'inner':
+            return np.logical_and(sdtrf <= 0, sdtrf > -thr)
+        elif type == 'outer':
+            return np.logical_and(sdtrf >= 0, sdtrf < thr)
+        else:
+            assert type == 'both', 'type should only be inner, outer or both'
+            return np.abs(sdtrf) < thr
 
-    if type == 'inner':
-        return np.logical_and(sdtrf <= 0, sdtrf > -thr)
-    elif type == 'outer':
-        return np.logical_and(sdtrf >= 0, sdtrf < thr)
+    elif method == 'conv':
+        # obtain boundaries
+        sdtrf = bw2boundary(bwvol)
+        if type == 'inner':
+            return np.logical_and(sdtrf, bwvol - 0)
+        elif type == 'outer':
+            return np.logical_and(sdtrf, 1 - bwvol)
+        else:
+            assert type == 'both', 'type should only be inner, outer or both'
+            return sdtrf
     else:
-        assert type == 'both', 'type should only be inner, outer or both'
-        return np.abs(sdtrf) < thr
+        assert method in ['sdt', 'conv'], 'method must be either sdt or conv'
 
 
 bw_to_contour = bw2contour
