@@ -7,3 +7,18 @@ def flatten_collection(l):
             yield from flatten_collection(el)
         else:
             yield el
+
+def unzip(zipped_list):
+    """
+    undo zip(l1, l2)
+    https://www.geeksforgeeks.org/python-unzip-a-list-of-tuples/
+
+    Args:
+        zipped_list ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    res = ([ i for i, j in zipped_list], 
+           [ j for i, j in zipped_list])
+    return res
