@@ -577,7 +577,7 @@ def perlin_vol(vol_shape, min_scale=0, max_scale=None, interp_order=1, wt_type='
     return vol
 
 
-def sphere_vol(vol_shape, center, radius, dtype=np.bool):
+def sphere_vol(vol_shape, radius, center=None, dtype=np.bool):
     """
     draw nd sphere volume
 
@@ -588,7 +588,7 @@ def sphere_vol(vol_shape, center, radius, dtype=np.bool):
         dtype (np.dtype): np.bool (binary sphere) or np.float32 (sphere with partial volume at edge)
 
     Returns:
-        [np.bool or np.float32]: bw sphere, either 0/1 (if bool) or [0,1] if float32
+        [tf.bool or tf.float32]: bw sphere, either 0/1 (if bool) or [0,1] if float32
     """
 
     # prepare inputs
@@ -596,7 +596,10 @@ def sphere_vol(vol_shape, center, radius, dtype=np.bool):
     ndims = len(vol_shape)
     
     if not isinstance(center, (list, tuple)):
-        center = [center] * ndims
+        if center is None:
+            center = [(f-1)/2 for f in vol_shape]
+        else:
+            center = [center] * ndims
     else: 
         assert len(center) == ndims, "center list length does not match vol_shape length"
     
