@@ -577,6 +577,49 @@ def perlin_vol(vol_shape, min_scale=0, max_scale=None, interp_order=1, wt_type='
     return vol
 
 
+def sphere_vol(vol_shape, center, radius, dtype=np.bool):
+    """
+    draw nd sphere volume
+
+    Args:
+        vol_shape (list): volume shape, a list of integers
+        center (list or int): list or integer, if list then same length as vol_shape list
+        radius (float): radius of the circle
+        dtype (np.dtype): np.bool (binary sphere) or np.float32 (sphere with partial volume at edge)
+
+    Returns:
+        [np.bool or np.float32]: bw sphere, either 0/1 (if bool) or [0,1] if float32
+    """
+
+    # prepare inputs
+    assert isinstance(vol_shape, (list, tuple)), 'vol_shape needs to be a list or tuple'
+    ndims = len(vol_shape)
+    
+    if not isinstance(center, (list, tuple)):
+        center = [center] * ndims
+    else: 
+        assert len(center) == ndims, "center list length does not match vol_shape length"
+    
+    # check dtype
+    assert dtype in [np.bool, np.float32], 'dtype should be np.bool, np.float32'
+
+    # prepare mesh
+    mesh = volsize2ndgrid(vol_shape)
+    centered_mesh = [(mesh[f] - center[f])**2 for f in range(ndims)]
+    dist_from_center = np.sqrt(np.sum(np.stack(centered_mesh, ndims), ndims))
+
+    # create sphere
+    sphere = dist_from_center <= radius
+    if dtype == np.float32: # enable partial volume at edge
+        float_sphere = sphere.astype(np.float32)
+        df = radius - dist_from_center
+        edge = np.logical_and(df < 0, df > -1)
+        sphere = float_sphere + edge * (1 + df)
+
+    # done!
+    return sphere
+
+
 ###############################################################################
 # internal
 ###############################################################################
