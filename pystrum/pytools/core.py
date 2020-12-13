@@ -1,3 +1,7 @@
+"""
+general library utils
+"""
+
 import collections, math
 
 def flatten_collection(l):
