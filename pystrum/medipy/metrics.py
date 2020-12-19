@@ -49,4 +49,3 @@ def dice(vol1, vol2, labels=None, nargout=1, method='iter'):
         return dicem
     else:
         return (dicem, labels)
-

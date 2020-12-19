@@ -48,7 +48,7 @@ def quilt(patches,
     # input checks
     assert patches.ndim == 2 or patches.ndim == 3, 'patches should be [NxV] or [NxVxK]'
     assert patches.shape[1] == np.prod(patch_size), \
-    "patches V (%d) does not match patch size V (%d)" % (patches.shape[1], np.prod(patch_size))
+        "patches V (%d) does not match patch size V (%d)" % (patches.shape[1], np.prod(patch_size))
     nb_dims = len(patch_size)
 
     # stack patches
@@ -107,11 +107,11 @@ def stack(patches, patch_size, grid_size, patch_stride=1, nargout=1):
     Contact: {adalca,klbouman}@csail.mit.edu
     """
 
-#    assert np.all(np.mod(patch_size, 2) == 1), "patch size is not odd"
+    #    assert np.all(np.mod(patch_size, 2) == 1), "patch size is not odd"
     K = patches.shape[2] if len(patches.shape) > 2 else 1
 
     # compute the input target_size and target
-    if np.prod(grid_size) == patches.shape[0]: # given the number of patches in the grid
+    if np.prod(grid_size) == patches.shape[0]:  # given the number of patches in the grid
         target_size = grid2volsize(grid_size, patch_size, patch_stride=patch_stride)
     else:
         target_size = grid_size
@@ -278,7 +278,7 @@ def gridsize(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1):
     # the final volume size will be
     # >> grid_size * patch_stride + patch_overlap
     # thus the part that is a multiplier of patch_stride is vol_size - patch_overlap
-    patch_stride_multiples = mod_vol_size - patch_overlap # not sure?
+    patch_stride_multiples = mod_vol_size - patch_overlap  # not sure?
     grid_size = np.floor(patch_stride_multiples / patch_stride).astype('int')
     assert np.all(np.array(grid_size) > 0), "Grid size is non-positive"
 
@@ -423,7 +423,6 @@ def patch_gen(vol, patch_size, stride=1, nargout=1, rand=False, rand_seed=None):
         if rand_seed is not None:
             random.seed(rand_seed)
         shuffle(rng)
-    
 
     for idx in rng:
         slicer = lambda f, g: slice(f[idx], f[idx] + g)

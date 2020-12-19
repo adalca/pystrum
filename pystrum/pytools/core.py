@@ -1,5 +1,6 @@
 import collections
 
+
 def flatten_collection(l):
     # https://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists
     for el in l:
@@ -7,6 +8,7 @@ def flatten_collection(l):
             yield from flatten_collection(el)
         else:
             yield el
+
 
 def unzip(zipped_list):
     """
@@ -19,6 +21,6 @@ def unzip(zipped_list):
     Returns:
         [type]: [description]
     """
-    res = ([ i for i, j in zipped_list], 
-           [ j for i, j in zipped_list])
+    res = ([i for i, j in zipped_list],
+           [j for i, j in zipped_list])
     return res
