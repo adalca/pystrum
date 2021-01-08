@@ -8,7 +8,7 @@ import numpy as np
 from . import ndutils as nd
 
 
-def seg2contour(seg, exclude_zero=True, contour_type='inner', thickness=1, method='sdt'):
+def seg2contour(seg, exclude_zero=True, contour_type='inner', thickness=1):
     '''
     transform nd segmentation (label maps) to contour maps
 
@@ -46,8 +46,7 @@ def seg2contour(seg, exclude_zero=True, contour_type='inner', thickness=1, metho
 
         # extract contour map for this label
         thickness = thickness + 0.01
-        label_contour_map = nd.bw2contour(label_map, type=contour_type, thr=thickness, 
-                                          method=method)
+        label_contour_map = nd.bw2contour(label_map, type=contour_type, thr=thickness)
 
         # assign contour to this label
         contour_map[label_contour_map] = lab
