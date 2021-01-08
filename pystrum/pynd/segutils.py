@@ -46,7 +46,8 @@ def seg2contour(seg, exclude_zero=True, contour_type='inner', thickness=1, metho
 
         # extract contour map for this label
         thickness = thickness + 0.01
-        label_contour_map = nd.bw2contour(label_map, type=contour_type, thr=thickness, method=method)
+        label_contour_map = nd.bw2contour(label_map, type=contour_type, thr=thickness, 
+                                          method=method)
 
         # assign contour to this label
         contour_map[label_contour_map] = lab

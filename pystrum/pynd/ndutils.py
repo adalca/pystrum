@@ -106,7 +106,7 @@ def bw2sdtrf(bwvol):
     return posdst * notbwvol - negdst * bwvol
 
 
-def bw2boundary(bwvol,thickness=1):
+def bw2boundary(bwvol, thickness=1):
     """
     computes the boundary between the binary True/False elements of logical bwvol
 
@@ -127,20 +127,21 @@ def bw2boundary(bwvol,thickness=1):
 
     # create a second-order difference filter kernel from Pascal's triangle
     if np.round(thickness) == 1:
-        kern = np.array([-1,+2,-1]).reshape([3]+[1]*(bwvol.ndim-1))
+        kern = np.array([-1, +2, -1]).reshape([3] + [1] * (bwvol.ndim - 1))
     elif np.round(thickness) == 2:
-        kern = np.array([+1,-4,+6,-4,+1]).reshape([5]+[1]*(bwvol.ndim-1))
+        kern = np.array([+1, -4, +6, -4, +1]).reshape([5] + [1] * (bwvol.ndim - 1))
     elif np.round(thickness) == 3:
-        kern = np.array([-1,+6,-15,+20,-15,+6,-1]).reshape([7]+[1]*(bwvol.ndim-1))
+        kern = np.array([-1, +6, -15, +20, -15, +6, -1]).reshape([7] + [1] * (bwvol.ndim - 1))
     else:
-        assert np.round(thickness) in [1,2,3], 'thickness should be between 1 and 3'
+        assert np.round(thickness) in [1, 2, 3], 'thickness should be between 1 and 3'
     # mark boundaries
     conv = np.zeros_like(bwvol)
-    for i in range(0,bwvol.ndim):
-        filt = np.swapaxes(kern,0,i)
+    for i in range(0, bwvol.ndim):
+        filt = np.swapaxes(kern, 0, i)
         conv = conv + np.abs(convolve(bwvol, filt))
 
     return conv > 0
+
 
 bw_to_sdtrf = bw2sdtrf
 
@@ -208,7 +209,7 @@ def bw2contour(bwvol, type='both', thr=1.01, method='sdt'):
     """
 
     if method == 'sdt':
-         # obtain a signed distance transform for the bw volume
+        # obtain a signed distance transform for the bw volume
         sdtrf = bw2sdtrf(bwvol)
         if type == 'inner':
             return np.logical_and(sdtrf <= 0, sdtrf > -thr)
