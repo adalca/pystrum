@@ -439,7 +439,7 @@ def centroid(im):
     """
     volgrid = volsize2ndgrid(im.shape)
     prob = [np.array(im) * np.array(volgrid[d]) for d in range(len(im.shape))]
-    return [np.sum(p.flat) / np.sum(im.shape) for p in prob]
+    return [np.sum(p.flat) / np.sum(im) for p in prob]
 
 
 def ind2sub_entries(indices, size, **kwargs):
