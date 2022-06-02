@@ -1,8 +1,29 @@
-import setuptools
+#!/usr/bin/env python
 
+import re
+import pathlib
+import setuptools
+import packaging.version
+
+
+# base source directory
+base_dir = pathlib.Path(__file__).parent.resolve()
+
+# extract the current version
+init_file = base_dir.joinpath('pystrum/__init__.py')
+init_text = open(init_file, 'rt').read()
+pattern = r"^__version__ = ['\"]([^'\"]*)['\"]"
+match = re.search(pattern, init_text, re.M)
+if not match:
+    raise RuntimeError(f'Unable to find __version__ in {init_file}.')
+version = match.group(1)
+if isinstance(packaging.version.parse(version), packaging.version.LegacyVersion):
+    raise RuntimeError(f'Invalid version string {version}.')
+
+# run setup
 setuptools.setup(
     name='pystrum',
-    version='0.2',
+    version=version,
     license='MIT',
     description='General Python Utility Library',
     url='https://github.com/adalca/pystrum',
