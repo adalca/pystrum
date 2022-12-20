@@ -578,7 +578,7 @@ def perlin_vol(vol_shape, min_scale=0, max_scale=None, interp_order=1, wt_type='
     return vol
 
 
-def sphere_vol(vol_shape, radius, center=None, dtype=np.bool):
+def sphere_vol(vol_shape, radius, center=None, dtype=bool):
     """
     draw nd sphere volume
 
@@ -586,7 +586,7 @@ def sphere_vol(vol_shape, radius, center=None, dtype=np.bool):
         vol_shape (list): volume shape, a list of integers
         center (list or int): list or integer, if list then same length as vol_shape list
         radius (float): radius of the circle
-        dtype (np.dtype): np.bool (binary sphere) or np.float32 (sphere with partial volume at edge)
+        dtype (np.dtype): bool (binary sphere) or np.float32 (sphere with partial volume at edge)
 
     Returns:
         [tf.bool or tf.float32]: bw sphere, either 0/1 (if bool) or [0,1] if float32
@@ -605,7 +605,7 @@ def sphere_vol(vol_shape, radius, center=None, dtype=np.bool):
         assert len(center) == ndims, "center list length does not match vol_shape length"
 
     # check dtype
-    assert dtype in [np.bool, np.float32], 'dtype should be np.bool, np.float32'
+    assert dtype in [bool, np.float32], 'dtype should be bool, np.float32'
 
     # prepare mesh
     mesh = volsize2ndgrid(vol_shape)
