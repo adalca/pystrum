@@ -134,7 +134,7 @@ def bw_grid(vol_shape, spacing, thickness=1):
         rng = [np.arange(0, f) for f in vol_shape]
         for t in range(thickness):
             rng[d] = np.append(np.arange(0 + t, v, spacing[d]), -1)
-            grid_image[ndgrid(*rng)] = 1
+            grid_image[tuple(ndgrid(*rng))] = 1
 
     return grid_image
 

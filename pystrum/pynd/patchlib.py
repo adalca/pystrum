@@ -362,7 +362,7 @@ def grid(vol_size, patch_size, patch_stride=1, start_sub=0, nargout=1, grid_type
         # if want index, this is the faster way to compute (rather than sub -> sub2ind
         all_idx = np.array(list(range(0, np.prod(vol_size))))
         all_idx = np.reshape(all_idx, vol_size)
-        idx = all_idx[idx]
+        idx = all_idx[tuple(idx)]
 
     if nargout == 1:
         return idx
